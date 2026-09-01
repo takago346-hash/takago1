@@ -1,0 +1,25 @@
+{
+  "name": "taka-go-remittance",
+  "version": "1.0.0",
+  "description": "tAKA GO - Financial Dashboard and Remittance Management System",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --open",
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "remittance",
+    "exchange-rate",
+    "dashboard",
+    "takago",
+    "finance"
+  ],
+  "author": "tAKA GO Team",
+  "license": "ISC",
+  "devDependencies": {
+    "vite": "^5.2.0"
+  }
+}

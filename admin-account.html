@@ -1,0 +1,2151 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TAKA GO - Admin Account</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="auth.js"></script>
+    <script src="script.js"></script>
+
+    <!-- PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        checkPageAccess(['admin', 'superadmin']);
+    </script>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f8fafc;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .account-container {
+            max-width: 1250px;
+            margin: 30px auto;
+            padding: 0 18px 50px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+
+        .page-header h2 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 26px;
+        }
+
+        .page-header p {
+            margin: 5px 0 0;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .account-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .refresh-btn {
+            background: #0f172a;
+            color: white;
+        }
+
+        .pdf-btn {
+            background: #2563eb;
+            color: white;
+        }
+
+        .balance-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(auto-fit, minmax(210px, 1fr));
+            gap: 16px;
+        }
+
+        .balance-card {
+            position: relative;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 3px 12px rgba(15, 23, 42, 0.05);
+            overflow: hidden;
+        }
+
+        .balance-card.total {
+            background: linear-gradient(
+                135deg,
+                #0f172a,
+                #1e293b
+            );
+            color: white;
+        }
+
+        .balance-card .icon {
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+
+        .balance-card .title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+
+        .balance-card.total .title {
+            color: #cbd5e1;
+        }
+
+        .balance-card .value {
+            margin-top: 8px;
+            font-size: 25px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .balance-card.total .value {
+            color: white;
+        }
+
+        .balance-card small {
+            display: block;
+            margin-top: 6px;
+            color: #94a3b8;
+            font-size: 11px;
+        }
+
+        .section-box {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 20px;
+            margin-top: 22px;
+            box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04);
+        }
+
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .section-title h3 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 18px;
+        }
+
+        .section-title span {
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .add-balance-box {
+            display: grid;
+            grid-template-columns:
+                repeat(auto-fit, minmax(190px, 1fr));
+            gap: 14px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            outline: none;
+            background: white;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #2563eb;
+        }
+
+        .add-btn {
+            background: #059669;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 11px 18px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 21px;
+        }
+
+        .admin-only-note {
+            margin-top: 12px;
+            background: #fef3c7;
+            color: #92400e;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 12px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+        }
+
+        .mini-stat {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .mini-stat h4 {
+            margin: 0;
+            color: #64748b;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .mini-stat strong {
+            display: block;
+            margin-top: 7px;
+            font-size: 21px;
+            color: #0f172a;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 760px;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #475569;
+            font-size: 11px;
+            text-transform: uppercase;
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 12px;
+            color: #334155;
+        }
+
+        .credit {
+            color: #059669;
+            font-weight: 800;
+        }
+
+        .debit {
+            color: #dc2626;
+            font-weight: 800;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .badge-add {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-payment {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .empty-row {
+            text-align: center;
+            color: #94a3b8;
+            padding: 30px !important;
+        }
+
+        .danger-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            padding: 7px 10px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        @media (max-width: 600px) {
+
+            .account-container {
+                margin-top: 18px;
+                padding: 0 12px 40px;
+            }
+
+            .page-header h2 {
+                font-size: 21px;
+            }
+
+            .balance-card .value {
+                font-size: 22px;
+            }
+
+            .section-box {
+                padding: 15px;
+            }
+
+            .add-btn {
+                width: 100%;
+                margin-top: 5px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="logo">
+        <h2>
+            TAKA<span class="go-tag">GO</span>
+            Admin
+        </h2>
+    </div>
+
+    <nav class="nav-menu">
+
+        <a href="index.html">
+            User View
+        </a>
+
+        <a href="admin.html">
+            Admin Dashboard
+        </a>
+
+        <a href="balance-manage.html">
+            Balance Portal
+        </a>
+
+        <a href="admin-account.html" class="active">
+            Admin Account
+        </a>
+
+    </nav>
+
+    <div
+        class="nav-actions"
+        style="
+            display:flex;
+            align-items:center;
+            gap:10px;
+        "
+    >
+
+        <span
+            id="user-badge"
+            style="
+                font-size:12px;
+                font-weight:700;
+                padding:5px 10px;
+                border-radius:20px;
+                background:#e2e8f0;
+                color:#334155;
+            "
+        ></span>
+
+        <button
+            class="btn"
+            style="
+                background:#ef4444;
+                color:white;
+            "
+            onclick="handleLogout()"
+        >
+            Logout
+        </button>
+
+    </div>
+
+</header>
+
+
+<main class="account-container">
+
+    <!-- HEADER -->
+
+    <div class="page-header">
+
+        <div>
+            <h2>💰 Admin Account</h2>
+
+            <p>
+                Manage company payment balances and financial transactions
+            </p>
+        </div>
+
+        <div class="header-buttons">
+
+            <button
+                class="account-btn refresh-btn"
+                onclick="refreshAccountPage()"
+            >
+                🔄 Refresh
+            </button>
+
+            <button
+                class="account-btn pdf-btn"
+                onclick="downloadFinancialPDF()"
+            >
+                📄 Financial PDF
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- BALANCE CARDS -->
+
+    <div class="balance-grid">
+
+        <div class="balance-card total">
+
+            <div class="icon">💰</div>
+
+            <div class="title">
+                My Total Balance
+            </div>
+
+            <div
+                class="value"
+                id="total-balance"
+            >
+                ৳ 0.00
+            </div>
+
+            <small>
+                Total available company balance
+            </small>
+
+        </div>
+
+
+        <div class="balance-card">
+
+            <div class="icon">🏦</div>
+
+            <div class="title">
+                Bank Balance
+            </div>
+
+            <div
+                class="value"
+                id="bank-balance"
+            >
+                ৳ 0.00
+            </div>
+
+            <small>
+                Bank payment balance
+            </small>
+
+        </div>
+
+
+        <div class="balance-card">
+
+            <div class="icon">💚</div>
+
+            <div class="title">
+                bKash Balance
+            </div>
+
+            <div
+                class="value"
+                id="bkash-balance"
+            >
+                ৳ 0.00
+            </div>
+
+            <small>
+                bKash balance
+            </small>
+
+        </div>
+
+
+        <div class="balance-card">
+
+            <div class="icon">📱</div>
+
+            <div class="title">
+                Mobile Recharge
+            </div>
+
+            <div
+                class="value"
+                id="recharge-balance"
+            >
+                ৳ 0.00
+            </div>
+
+            <small>
+                Recharge balance
+            </small>
+
+        </div>
+
+
+        <div class="balance-card">
+
+            <div class="icon">🟠</div>
+
+            <div class="title">
+                Nagad Balance
+            </div>
+
+            <div
+                class="value"
+                id="nagad-balance"
+            >
+                ৳ 0.00
+            </div>
+
+            <small>
+                Nagad balance
+            </small>
+
+        </div>
+
+
+        <div class="balance-card">
+
+            <div class="icon">🚀</div>
+
+            <div class="title">
+                Rocket Balance
+            </div>
+
+            <div
+                class="value"
+                id="rocket-balance"
+            >
+                ৳ 0.00
+            </div>
+
+            <small>
+                Rocket balance
+            </small>
+
+        </div>
+
+    </div>
+
+
+
+        <div class="balance-card">
+
+            <div class="icon">💼</div>
+
+            <div class="title">
+                Other Balance
+            </div>
+
+            <div
+                class="value"
+                id="other-balance"
+            >
+                ৳ 0.00
+            </div>
+
+            <small>
+                Other payment balance
+            </small>
+
+        </div>
+
+    <!-- ADD BALANCE -->
+
+    <section
+        class="section-box"
+        id="add-balance-section"
+    >
+
+        <div class="section-title">
+
+            <div>
+
+                <h3>
+                    ➕ Add Balance
+                </h3>
+
+                <span>
+                    Only Superadmin can add company balance
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="add-balance-box">
+
+            <div class="form-group">
+
+                <label>
+                    Payment Method
+                </label>
+
+                <select id="add-method">
+
+                    <option value="bank">
+                        🏦 Bank
+                    </option>
+
+                    <option value="bkash">
+                        💚 bKash
+                    </option>
+
+                    <option value="recharge">
+                        📱 Mobile Recharge
+                    </option>
+
+                    <option value="nagad">
+                        🟠 Nagad
+                    </option>
+
+                    <option value="rocket">
+                        🚀 Rocket
+                    </option>
+
+                    <option value="other">
+                        💼 Other
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Amount (BDT)
+                </label>
+
+                <input
+                    type="number"
+                    id="add-amount"
+                    min="0"
+                    step="0.01"
+                    placeholder="Enter amount"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Reference / Note
+                </label>
+
+                <input
+                    type="text"
+                    id="add-reference"
+                    placeholder="Transaction reference"
+                >
+
+            </div>
+
+
+            <div>
+
+                <button
+                    class="add-btn"
+                    onclick="addCompanyBalance()"
+                >
+                    ➕ Add Balance
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="admin-only-note">
+            🔐 Security: This option is available only for
+            <strong>SUPERADMIN</strong>.
+        </div>
+
+    </section>
+
+
+    <!-- TODAY / MONTH -->
+
+    <section class="section-box">
+
+        <div class="section-title">
+
+            <h3>
+                📊 Transaction Summary
+            </h3>
+
+        </div>
+
+
+        <div class="stats-grid">
+
+            <div class="mini-stat">
+
+                <h4>
+                    Today's Added
+                </h4>
+
+                <strong
+                    id="today-added"
+                >
+                    ৳ 0.00
+                </strong>
+
+            </div>
+
+
+            <div class="mini-stat">
+
+                <h4>
+                    Today's Payment
+                </h4>
+
+                <strong
+                    id="today-payment"
+                >
+                    ৳ 0.00
+                </strong>
+
+            </div>
+
+
+            <div class="mini-stat">
+
+                <h4>
+                    Monthly Added
+                </h4>
+
+                <strong
+                    id="month-added"
+                >
+                    ৳ 0.00
+                </strong>
+
+            </div>
+
+
+            <div class="mini-stat">
+
+                <h4>
+                    Monthly Payment
+                </h4>
+
+                <strong
+                    id="month-payment"
+                >
+                    ৳ 0.00
+                </strong>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- RECENT TRANSACTIONS -->
+
+    <section class="section-box">
+
+        <div class="section-title">
+
+            <div>
+
+                <h3>
+                    📋 Recent Transactions
+                </h3>
+
+                <span>
+                    Add Balance and user payment history
+                </span>
+
+            </div>
+
+            <span id="transaction-count">
+                0 Transactions
+            </span>
+
+        </div>
+
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Date
+                        </th>
+
+                        <th>
+                            Type
+                        </th>
+
+                        <th>
+                            Method
+                        </th>
+
+                        <th>
+                            User
+                        </th>
+
+                        <th>
+                            Reference
+                        </th>
+
+                        <th>
+                            Amount
+                        </th>
+
+                        <th>
+                            Balance
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody
+                    id="financial-history"
+                >
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+    <!-- CLEAR DATA -->
+
+    <section
+        class="section-box"
+        id="superadmin-tools"
+        style="display:none;"
+    >
+
+        <div class="section-title">
+
+            <div>
+
+                <h3>
+                    ⚠️ Superadmin Tools
+                </h3>
+
+                <span>
+                    Dangerous actions
+                </span>
+
+            </div>
+
+        </div>
+
+        <button
+            class="danger-btn"
+            onclick="clearFinancialAccount()"
+        >
+            Clear Financial Account Data
+        </button>
+
+    </section>
+
+</main>
+
+
+<script>
+
+/* =========================================================
+   STORAGE KEY
+========================================================= */
+
+const FINANCIAL_KEY =
+    "takago_admin_financial_account";
+
+
+/* =========================================================
+   GET CURRENT USER
+========================================================= */
+
+function getCurrentAdminUser() {
+
+    try {
+
+        return JSON.parse(
+            localStorage.getItem(
+                "takago_current_user"
+            )
+        );
+
+    } catch (error) {
+
+        return null;
+    }
+}
+
+
+/* =========================================================
+   ROLE
+========================================================= */
+
+function getCurrentRole() {
+
+    const user =
+        getCurrentAdminUser();
+
+    return String(
+        user?.role || ""
+    )
+    .toLowerCase()
+    .trim();
+}
+
+
+/* =========================================================
+   DEFAULT ACCOUNT
+========================================================= */
+
+function getFinancialAccount() {
+
+    let account;
+
+    try {
+
+        account =
+            JSON.parse(
+                localStorage.getItem(
+                    FINANCIAL_KEY
+                )
+            );
+
+    } catch (error) {
+
+        account = null;
+    }
+
+
+    if (
+        !account ||
+        typeof account !== "object"
+    ) {
+
+        account = {
+
+            balances: {
+
+                bank: 0,
+
+                bkash: 0,
+
+                recharge: 0,
+
+                nagad: 0,
+
+                rocket: 0,
+
+                other: 0
+
+            },
+
+            transactions: []
+
+        };
+
+        saveFinancialAccount(account);
+    }
+
+
+    if (!account.balances) {
+
+        account.balances = {};
+    }
+
+
+    const methods = [
+        "bank",
+        "bkash",
+        "recharge",
+        "nagad",
+        "rocket",
+        "other"
+    ];
+
+
+    methods.forEach(
+        function(method) {
+
+            if (
+                typeof account.balances[method]
+                !== "number"
+            ) {
+
+                account.balances[method] =
+                    parseFloat(
+                        account.balances[method] || 0
+                    );
+            }
+        }
+    );
+
+
+    if (
+        !Array.isArray(
+            account.transactions
+        )
+    ) {
+
+        account.transactions = [];
+    }
+
+
+    return account;
+}
+
+
+/* =========================================================
+   SAVE
+========================================================= */
+
+function saveFinancialAccount(account) {
+
+    localStorage.setItem(
+        FINANCIAL_KEY,
+        JSON.stringify(account)
+    );
+}
+
+
+/* =========================================================
+   FORMAT MONEY
+========================================================= */
+
+function money(amount) {
+
+    return "৳ " +
+        Number(amount || 0)
+        .toLocaleString(
+            "en-IN",
+            {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }
+        );
+}
+
+
+/* =========================================================
+   METHOD NAME
+========================================================= */
+
+function methodName(method) {
+
+    const names = {
+
+        bank: "🏦 Bank",
+
+        bkash: "💚 bKash",
+
+        recharge: "📱 Mobile Recharge",
+
+        nagad: "🟠 Nagad",
+
+        rocket: "🚀 Rocket"
+
+    };
+
+    return names[method] || method;
+}
+
+
+/* =========================================================
+   TOTAL BALANCE
+========================================================= */
+
+function getTotalBalance(account) {
+
+    return Object.values(
+        account.balances
+    )
+    .reduce(
+        function(sum, value) {
+
+            return sum +
+                parseFloat(value || 0);
+
+        },
+        0
+    );
+}
+
+
+/* =========================================================
+   ADD COMPANY BALANCE
+========================================================= */
+
+function addCompanyBalance() {
+
+    if (
+        getCurrentRole() !==
+        "superadmin"
+    ) {
+
+        alert(
+            "Access Denied! Only Superadmin can add balance."
+        );
+
+        return;
+    }
+
+
+    const method =
+        document.getElementById(
+            "add-method"
+        ).value;
+
+
+    const amount =
+        parseFloat(
+            document.getElementById(
+                "add-amount"
+            ).value
+        );
+
+
+    const reference =
+        document.getElementById(
+            "add-reference"
+        ).value
+        .trim();
+
+
+    if (
+        !amount ||
+        amount <= 0
+    ) {
+
+        alert(
+            "Please enter a valid amount."
+        );
+
+        return;
+    }
+
+
+    if (
+        !confirm(
+            `Add ${money(amount)} to ${methodName(method)}?`
+        )
+    ) {
+
+        return;
+    }
+
+
+    const account =
+        getFinancialAccount();
+
+
+    account.balances[method] =
+        parseFloat(
+            account.balances[method] || 0
+        ) + amount;
+
+
+    const transaction = {
+
+        id:
+            "ADD-" +
+            Date.now(),
+
+        type:
+            "add",
+
+        method:
+            method,
+
+        amount:
+            amount,
+
+        user:
+            getCurrentAdminUser()?.name ||
+            "Superadmin",
+
+        reference:
+            reference || "Balance Added",
+
+        timestamp:
+            new Date().toISOString(),
+
+        balanceAfter:
+            getTotalBalance(account)
+
+    };
+
+
+    account.transactions.unshift(
+        transaction
+    );
+
+
+    saveFinancialAccount(account);
+
+
+    document.getElementById(
+        "add-amount"
+    ).value = "";
+
+
+    document.getElementById(
+        "add-reference"
+    ).value = "";
+
+
+    renderAccount();
+
+
+    alert(
+        `${money(amount)} added successfully to ${methodName(method)}.`
+    );
+}
+
+
+/* =========================================================
+   RENDER BALANCES
+========================================================= */
+
+function renderBalances(account) {
+
+    document.getElementById(
+        "bank-balance"
+    ).innerText =
+        money(
+            account.balances.bank
+        );
+
+
+    document.getElementById(
+        "bkash-balance"
+    ).innerText =
+        money(
+            account.balances.bkash
+        );
+
+
+    document.getElementById(
+        "recharge-balance"
+    ).innerText =
+        money(
+            account.balances.recharge
+        );
+
+
+    document.getElementById(
+        "nagad-balance"
+    ).innerText =
+        money(
+            account.balances.nagad
+        );
+
+
+    document.getElementById(
+        "rocket-balance"
+    ).innerText =
+        money(
+            account.balances.rocket
+        );
+
+    const otherBalanceEl =
+        document.getElementById("other-balance");
+
+    if (otherBalanceEl) {
+        otherBalanceEl.innerText =
+            money(account.balances.other);
+    }
+
+
+    document.getElementById(
+        "total-balance"
+    ).innerText =
+        money(
+            getTotalBalance(account)
+        );
+}
+
+
+/* =========================================================
+   DATE HELPERS
+========================================================= */
+
+function isToday(timestamp) {
+
+    const d =
+        new Date(timestamp);
+
+    const now =
+        new Date();
+
+    return (
+        d.getFullYear() ===
+        now.getFullYear() &&
+
+        d.getMonth() ===
+        now.getMonth() &&
+
+        d.getDate() ===
+        now.getDate()
+    );
+}
+
+
+function isThisMonth(timestamp) {
+
+    const d =
+        new Date(timestamp);
+
+    const now =
+        new Date();
+
+    return (
+        d.getFullYear() ===
+        now.getFullYear() &&
+
+        d.getMonth() ===
+        now.getMonth()
+    );
+}
+
+
+/* =========================================================
+   TRANSACTION SUMMARY
+========================================================= */
+
+function renderSummary(account) {
+
+    let todayAdded = 0;
+
+    let todayPayment = 0;
+
+    let monthAdded = 0;
+
+    let monthPayment = 0;
+
+
+    account.transactions.forEach(
+        function(tx) {
+
+            const amount =
+                parseFloat(
+                    tx.amount || 0
+                );
+
+
+            if (
+                tx.type === "add"
+            ) {
+
+                if (
+                    isToday(
+                        tx.timestamp
+                    )
+                ) {
+
+                    todayAdded += amount;
+                }
+
+
+                if (
+                    isThisMonth(
+                        tx.timestamp
+                    )
+                ) {
+
+                    monthAdded += amount;
+                }
+            }
+
+
+            if (
+                tx.type === "payment"
+            ) {
+
+                if (
+                    isToday(
+                        tx.timestamp
+                    )
+                ) {
+
+                    todayPayment += amount;
+                }
+
+
+                if (
+                    isThisMonth(
+                        tx.timestamp
+                    )
+                ) {
+
+                    monthPayment += amount;
+                }
+            }
+
+        }
+    );
+
+
+    document.getElementById(
+        "today-added"
+    ).innerText =
+        money(todayAdded);
+
+
+    document.getElementById(
+        "today-payment"
+    ).innerText =
+        money(todayPayment);
+
+
+    document.getElementById(
+        "month-added"
+    ).innerText =
+        money(monthAdded);
+
+
+    document.getElementById(
+        "month-payment"
+    ).innerText =
+        money(monthPayment);
+}
+
+
+/* =========================================================
+   TRANSACTION HISTORY
+========================================================= */
+
+function renderHistory(account) {
+
+    const tbody =
+        document.getElementById(
+            "financial-history"
+        );
+
+
+    tbody.innerHTML = "";
+
+
+    const transactions =
+        account.transactions
+        .slice(0, 100);
+
+
+    document.getElementById(
+        "transaction-count"
+    ).innerText =
+        `${account.transactions.length} Transactions`;
+
+
+    if (
+        transactions.length === 0
+    ) {
+
+        tbody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="7"
+                    class="empty-row"
+                >
+                    No financial transactions found
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+    }
+
+
+    transactions.forEach(
+        function(tx) {
+
+            const tr =
+                document.createElement(
+                    "tr"
+                );
+
+
+            const date =
+                new Date(
+                    tx.timestamp
+                );
+
+
+            const formattedDate =
+                date.toLocaleString();
+
+
+            const typeHtml =
+                tx.type === "add"
+
+                    ?
+
+                `<span class="badge badge-add">
+                    ADD BALANCE
+                </span>`
+
+                    :
+
+                tx.type === "user_balance_add"
+
+                    ?
+
+                `<span class="badge badge-payment">
+                    USER BALANCE GIVEN
+                </span>`
+
+                    :
+
+                `<span class="badge badge-payment">
+                    USER PAYMENT
+                </span>`;
+
+
+            const amountClass =
+                tx.type === "add"
+                    ? "credit"
+                    : "debit";
+
+
+            const sign =
+                tx.type === "add"
+                    ? "+"
+                    : "-";
+
+
+            tr.innerHTML = `
+
+                <td>
+                    ${formattedDate}
+                </td>
+
+                <td>
+                    ${typeHtml}
+                </td>
+
+                <td>
+                    ${methodName(
+                        tx.method || "-"
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        tx.user || "-"
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        tx.reference || "-"
+                    )}
+                </td>
+
+                <td class="${amountClass}">
+                    ${sign} ${money(
+                        tx.amount
+                    )}
+                </td>
+
+                <td>
+                    ${money(
+                        tx.balanceAfter
+                    )}
+                </td>
+
+            `;
+
+
+            tbody.appendChild(tr);
+        }
+    );
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHtml(value) {
+
+    return String(value || "")
+        .replace(
+            /[&<>"']/g,
+            function(match) {
+
+                const chars = {
+
+                    "&": "&amp;",
+
+                    "<": "&lt;",
+
+                    ">": "&gt;",
+
+                    '"': "&quot;",
+
+                    "'": "&#039;"
+
+                };
+
+                return chars[match];
+            }
+        );
+}
+
+
+/* =========================================================
+   ROLE UI
+========================================================= */
+
+function applyRoleUI() {
+
+    const role =
+        getCurrentRole();
+
+
+    const addSection =
+        document.getElementById(
+            "add-balance-section"
+        );
+
+
+    const tools =
+        document.getElementById(
+            "superadmin-tools"
+        );
+
+
+    const badge =
+        document.getElementById(
+            "user-badge"
+        );
+
+
+    if (role === "superadmin") {
+
+        if (addSection) {
+
+            addSection.style.display =
+                "block";
+        }
+
+
+        if (tools) {
+
+            tools.style.display =
+                "block";
+        }
+
+
+        if (badge) {
+
+            badge.innerText =
+                "SUPERADMIN";
+        }
+
+    } else {
+
+        if (addSection) {
+
+            addSection.style.display =
+                "none";
+        }
+
+
+        if (tools) {
+
+            tools.style.display =
+                "none";
+        }
+
+
+        if (badge) {
+
+            badge.innerText =
+                "ADMIN";
+        }
+    }
+}
+
+
+/* =========================================================
+   RENDER ACCOUNT
+========================================================= */
+
+function renderAccount() {
+
+    const account =
+        getFinancialAccount();
+
+
+    renderBalances(account);
+
+    renderSummary(account);
+
+    renderHistory(account);
+
+    applyRoleUI();
+}
+
+
+/* =========================================================
+   REFRESH
+========================================================= */
+
+function refreshAccountPage() {
+
+    renderAccount();
+
+    alert(
+        "Account data refreshed successfully."
+    );
+}
+
+
+/* =========================================================
+   FINANCIAL PDF
+========================================================= */
+
+function downloadFinancialPDF() {
+
+    const account =
+        getFinancialAccount();
+
+
+    if (
+        !account.transactions.length
+    ) {
+
+        alert(
+            "No financial transaction found."
+        );
+
+        return;
+    }
+
+
+    if (
+        !window.jspdf ||
+        !window.jspdf.jsPDF
+    ) {
+
+        alert(
+            "PDF library is not loaded."
+        );
+
+        return;
+    }
+
+
+    const {
+        jsPDF
+    } = window.jspdf;
+
+
+    const doc =
+        new jsPDF();
+
+
+    doc.setFontSize(20);
+
+    doc.setFont(
+        "helvetica",
+        "bold"
+    );
+
+    doc.text(
+        "TAKA GO",
+        14,
+        18
+    );
+
+
+    doc.setFontSize(12);
+
+    doc.setFont(
+        "helvetica",
+        "normal"
+    );
+
+    doc.text(
+        "Financial Account Report",
+        14,
+        27
+    );
+
+
+    doc.text(
+        "Generated: " +
+        new Date().toLocaleString(),
+        14,
+        35
+    );
+
+
+    doc.text(
+        "Total Balance: " +
+        money(
+            getTotalBalance(account)
+        ),
+        14,
+        43
+    );
+
+
+    if (
+        typeof doc.autoTable !==
+        "function"
+    ) {
+
+        alert(
+            "PDF AutoTable plugin is not loaded."
+        );
+
+        return;
+    }
+
+
+    const rows =
+        account.transactions
+        .slice(0, 200)
+        .map(
+            function(tx) {
+
+                return [
+
+                    new Date(
+                        tx.timestamp
+                    ).toLocaleString(),
+
+                    tx.type === "add"
+                        ? "ADD"
+                        : "PAYMENT",
+
+                    methodName(
+                        tx.method
+                    ),
+
+                    tx.user || "-",
+
+                    tx.reference || "-",
+
+                    (
+                        tx.type === "add"
+                            ? "+"
+                            : "-"
+                    ) +
+                    " BDT " +
+                    Number(
+                        tx.amount || 0
+                    ).toFixed(2),
+
+                    "BDT " +
+                    Number(
+                        tx.balanceAfter || 0
+                    ).toFixed(2)
+
+                ];
+            }
+        );
+
+
+    doc.autoTable({
+
+        startY: 50,
+
+        head: [[
+
+            "Date",
+
+            "Type",
+
+            "Method",
+
+            "User",
+
+            "Reference",
+
+            "Amount",
+
+            "Balance"
+
+        ]],
+
+        body: rows,
+
+        theme: "grid",
+
+        styles: {
+
+            fontSize: 7,
+
+            cellPadding: 3
+
+        },
+
+        headStyles: {
+
+            fontStyle: "bold"
+
+        },
+
+        margin: {
+
+            left: 10,
+
+            right: 10
+
+        }
+
+    });
+
+
+    const finalY =
+        doc.lastAutoTable
+            ? doc.lastAutoTable.finalY + 10
+            : 60;
+
+
+    doc.setFontSize(10);
+
+    doc.setFont(
+        "helvetica",
+        "bold"
+    );
+
+
+    doc.text(
+        "Bank: " +
+        money(
+            account.balances.bank
+        ),
+        14,
+        finalY
+    );
+
+
+    doc.text(
+        "bKash: " +
+        money(
+            account.balances.bkash
+        ),
+        14,
+        finalY + 7
+    );
+
+
+    doc.text(
+        "Mobile Recharge: " +
+        money(
+            account.balances.recharge
+        ),
+        14,
+        finalY + 14
+    );
+
+
+    doc.text(
+        "Nagad: " +
+        money(
+            account.balances.nagad
+        ),
+        14,
+        finalY + 21
+    );
+
+
+    doc.text(
+        "Rocket: " +
+        money(
+            account.balances.rocket
+        ),
+        14,
+        finalY + 28
+    );
+
+
+    doc.text(
+        "TOTAL: " +
+        money(
+            getTotalBalance(account)
+        ),
+        14,
+        finalY + 38
+    );
+
+
+    doc.save(
+        "TAKA-GO-Financial-Report-" +
+        new Date()
+            .toISOString()
+            .slice(0, 10) +
+        ".pdf"
+    );
+}
+
+
+/* =========================================================
+   CLEAR FINANCIAL ACCOUNT
+========================================================= */
+
+function clearFinancialAccount() {
+
+    if (
+        getCurrentRole() !==
+        "superadmin"
+    ) {
+
+        alert(
+            "Access Denied!"
+        );
+
+        return;
+    }
+
+
+    if (
+        !confirm(
+            "WARNING!\n\nThis will permanently clear all Admin Account financial balances and history.\n\nContinue?"
+        )
+    ) {
+
+        return;
+    }
+
+
+    localStorage.removeItem(
+        FINANCIAL_KEY
+    );
+
+
+    renderAccount();
+
+
+    alert(
+        "Financial account data cleared."
+    );
+}
+
+
+/* =========================================================
+   AUTO UPDATE
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+        renderAccount();
+
+    }
+);
+
+
+/*
+ * Auto refresh every 3 seconds.
+ * Useful when another admin action
+ * changes localStorage.
+ */
+
+setInterval(
+    function() {
+
+        renderAccount();
+
+    },
+    3000
+);
+
+</script>
+
+</body>
+</html>

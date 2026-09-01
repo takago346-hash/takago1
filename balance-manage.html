@@ -1,0 +1,3208 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>TAKA GO - Customer Balance & Due Manager</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="auth.js"></script>
+    <script src="script.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        checkPageAccess(['admin', 'superadmin']);
+    </script>
+
+
+    <style>
+
+        .profile-card {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            background: #ffffff;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .stat-item h4 {
+            margin: 0;
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+
+        .stat-item p {
+            margin: 5px 0 0 0;
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .super-admin-box {
+            background: #fff1f2;
+            border: 2px dashed #f43f5e;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 25px;
+            display: none;
+        }
+
+        .pdf-print-area {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<header class="navbar">
+
+    <div class="logo">
+
+        <h2>
+            TAKA<span class="go-tag">GO</span> Ledger
+        </h2>
+
+    </div>
+
+
+    <nav class="nav-menu">
+
+        <a href="admin.html">
+            Admin Dashboard
+        </a>
+
+        <a
+            href="balance-manage.html"
+            class="active"
+        >
+            Balance & Due Portal
+        </a>
+
+        <span id="nav-role-links"></span>
+
+    </nav>
+
+
+    <div
+        class="nav-actions"
+        style="
+            display:flex;
+            align-items:center;
+            gap:10px;
+        "
+    >
+
+        <span
+            id="user-badge"
+            style="
+                font-size:13px;
+                font-weight:600;
+                padding:4px 10px;
+                border-radius:20px;
+                background:#e5e7eb;
+                color:#374151;
+            "
+        ></span>
+
+
+        <button
+            class="btn"
+            style="
+                background:#ef4444;
+                color:white;
+            "
+            onclick="handleLogout()"
+        >
+            Logout
+        </button>
+
+    </div>
+
+</header>
+
+
+
+<div
+    class="main-container"
+    style="
+        max-width:1000px;
+        margin:30px auto;
+    "
+>
+
+
+<!-- =========================================================
+     1. ADD / RECHARGE USER WALLET
+========================================================= -->
+
+<section class="card-box">
+
+    <h2 class="section-title">
+        Add / Recharge User Wallet Balance (BDT ৳)
+    </h2>
+
+
+    <form
+        id="addBalanceForm"
+        onsubmit="handleAddUserBalance(event)"
+    >
+
+        <div class="form-row">
+
+
+            <div
+                class="form-group"
+                style="flex:2;"
+            >
+
+                <label>
+                    Select Customer User
+                </label>
+
+                <select
+                    id="bal-user-select"
+                    required
+                ></select>
+
+            </div>
+
+
+
+            <div
+                class="form-group"
+                style="flex:2;"
+            >
+
+                <label>
+                    Amount to Add (BDT ৳)
+                </label>
+
+                <input
+                    type="number"
+                    id="bal-amount-input"
+                    step="0.01"
+                    min="0.01"
+                    required
+                    placeholder="e.g. 5000.00"
+                >
+
+            </div>
+
+
+
+            <div
+                class="form-group"
+                style="flex:2;"
+            >
+
+                <label>
+                    Admin Account (Money Source)
+                </label>
+
+                <select
+                    id="bal-source-method"
+                    style="font-weight:bold;background:#eff6ff;"
+                    required
+                >
+                    <option value="bkash">💚 bKash</option>
+                    <option value="nagad">🟠 Nagad</option>
+                    <option value="bank">🏦 Bank</option>
+                    <option value="recharge">📱 Mobile Recharge</option>
+                    <option value="rocket">🚀 Rocket</option>
+                    <option value="other">💼 Other</option>
+                </select>
+
+            </div>
+
+
+            <div
+                class="form-group"
+                style="flex:2;"
+            >
+
+                <label>
+                    Payment Type
+                </label>
+
+                <select
+                    id="bal-type-select"
+                    style="
+                        font-weight:bold;
+                        background:#f0fdf4;
+                    "
+                    required
+                >
+
+                    <option value="PAID">
+                        ✅ Paid (Cash Received)
+                    </option>
+
+                    <option value="DUE">
+                        ⚠️ Due (On Credit)
+                    </option>
+
+                </select>
+
+            </div>
+
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="btn btn-primary"
+        >
+            Process BDT Wallet Recharge
+        </button>
+
+    </form>
+
+</section>
+
+
+
+<!-- =========================================================
+     2. CUSTOMER PROFILE
+========================================================= -->
+
+<section
+    class="card-box"
+    style="margin-top:25px;"
+>
+
+    <h2 class="section-title">
+        Customer Due Profile & Payment Search
+    </h2>
+
+
+    <div
+        class="form-row"
+        style="align-items:flex-end;"
+    >
+
+
+        <div
+            class="form-group"
+            style="flex:2;"
+        >
+
+            <label>
+                Search Customer Account
+            </label>
+
+            <select
+                id="search-user-select"
+                required
+            ></select>
+
+        </div>
+
+
+        <div
+            class="form-group"
+            style="flex:1;"
+        >
+
+            <button
+                type="button"
+                class="btn btn-secondary"
+                style="
+                    background:#2563eb;
+                    color:white;
+                    width:100%;
+                    padding:11px;
+                "
+                onclick="searchUserProfile()"
+            >
+                🔍 Search Profile
+            </button>
+
+        </div>
+
+
+    </div>
+
+
+
+    <div
+        id="customer-profile-card"
+        class="profile-card"
+    >
+
+
+        <!-- DATE / PDF -->
+
+        <div
+            style="
+                background:#eff6ff;
+                padding:15px;
+                border-radius:8px;
+                border:1px solid #bfdbfe;
+                margin-bottom:20px;
+            "
+        >
+
+            <h4
+                style="
+                    margin:0 0 10px 0;
+                    color:#1e40af;
+                "
+            >
+                📅 Select Statement Date Range & Export PDF
+            </h4>
+
+
+            <div
+                class="form-row"
+                style="
+                    margin:0;
+                    align-items:flex-end;
+                "
+            >
+
+
+                <div
+                    class="form-group"
+                    style="
+                        margin:0;
+                        flex:1;
+                    "
+                >
+
+                    <label
+                        style="
+                            font-size:12px;
+                            color:#1e3a8a;
+                        "
+                    >
+                        From Date
+                    </label>
+
+                    <input
+                        type="date"
+                        id="pdf-start-date"
+                        onchange="filterCustomerHistory()"
+                    >
+
+                </div>
+
+
+                <div
+                    class="form-group"
+                    style="
+                        margin:0;
+                        flex:1;
+                    "
+                >
+
+                    <label
+                        style="
+                            font-size:12px;
+                            color:#1e3a8a;
+                        "
+                    >
+                        To Date
+                    </label>
+
+                    <input
+                        type="date"
+                        id="pdf-end-date"
+                        onchange="filterCustomerHistory()"
+                    >
+
+                </div>
+
+
+                <div
+                    class="form-group"
+                    style="
+                        margin:0;
+                        flex:1;
+                    "
+                >
+
+                    <button
+                        class="btn"
+                        style="
+                            background:#dc2626;
+                            color:white;
+                            width:100%;
+                            height:40px;
+                            font-weight:700;
+                        "
+                        onclick="downloadCustomerPDFReport()"
+                    >
+                        📄 Download PDF Report
+                    </button>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+
+        <!-- PRINTABLE AREA -->
+
+        <div
+            id="printable-pdf-area"
+            class="pdf-print-area"
+        >
+
+
+            <div class="profile-header">
+
+
+                <div>
+
+                    <h2
+                        style="
+                            margin:0;
+                            color:#2563eb;
+                        "
+                    >
+                        TAKA<span style="color:#d97706;">
+                            GO
+                        </span>
+                        Account Statement
+                    </h2>
+
+
+                    <h3
+                        id="prof-name"
+                        style="
+                            margin:5px 0 0 0;
+                            font-size:18px;
+                            color:#0f172a;
+                        "
+                    >
+                        Customer Name
+                    </h3>
+
+
+                    <small
+                        id="prof-username"
+                        class="text-muted"
+                    >
+                        @username
+                    </small>
+
+                </div>
+
+
+                <div style="text-align:right;">
+
+                    <span
+                        class="badge"
+                        style="
+                            background:#7c3aed;
+                            font-size:13px;
+                            padding:6px 12px;
+                            color:white;
+                        "
+                    >
+                        BDT ৳ Account
+                    </span>
+
+
+                    <br>
+
+
+                    <small
+                        id="pdf-gen-time"
+                        style="
+                            color:#64748b;
+                            display:block;
+                            margin-top:5px;
+                        "
+                    ></small>
+
+                </div>
+
+
+            </div>
+
+
+
+            <div class="stat-grid">
+
+
+                <div class="stat-item">
+
+                    <h4>
+                        Wallet Balance
+                    </h4>
+
+                    <p
+                        id="prof-wallet"
+                        style="color:#059669;"
+                    >
+                        ৳ 0.00
+                    </p>
+
+                </div>
+
+
+
+                <div class="stat-item">
+
+                    <h4>
+                        Total Due (BDT)
+                    </h4>
+
+                    <p
+                        id="prof-due"
+                        style="color:#d97706;"
+                    >
+                        ৳ 0.00
+                    </p>
+
+                </div>
+
+
+
+                <div class="stat-item">
+
+                    <h4>
+                        Paid Due (BDT)
+                    </h4>
+
+                    <p
+                        id="prof-paid"
+                        style="color:#2563eb;"
+                    >
+                        ৳ 0.00
+                    </p>
+
+                </div>
+
+
+
+                <div class="stat-item">
+
+                    <h4>
+                        Remaining Due
+                    </h4>
+
+                    <p
+                        id="prof-remaining"
+                        style="color:#dc2626;"
+                    >
+                        ৳ 0.00
+                    </p>
+
+                </div>
+
+
+            </div>
+
+
+
+
+            <div
+                id="prof-method-balances"
+                style="
+                    display:grid;
+                    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+                    gap:12px;
+                    margin-top:18px;
+                "
+            >
+                <div class="stat-item"><h4>💚 bKash</h4><p id="prof-bkash">৳ 0.00</p></div>
+                <div class="stat-item"><h4>🟠 Nagad</h4><p id="prof-nagad">৳ 0.00</p></div>
+                <div class="stat-item"><h4>🏦 Bank</h4><p id="prof-bank">৳ 0.00</p></div>
+                <div class="stat-item"><h4>📱 Recharge</h4><p id="prof-recharge">৳ 0.00</p></div>
+                <div class="stat-item"><h4>🚀 Rocket</h4><p id="prof-rocket">৳ 0.00</p></div>
+                <div class="stat-item"><h4>💼 Other</h4><p id="prof-other">৳ 0.00</p></div>
+            </div>
+
+
+            <h4
+                style="
+                    margin:20px 0 10px 0;
+                    color:#334155;
+                    border-bottom:2px solid #e2e8f0;
+                    padding-bottom:5px;
+                "
+            >
+                Statement Activity History
+            </h4>
+
+
+            <table
+                class="data-table"
+                style="
+                    width:100%;
+                    border-collapse:collapse;
+                "
+            >
+
+                <thead>
+
+                    <tr
+                        style="
+                            background:#f1f5f9;
+                        "
+                    >
+
+                        <th>
+                            Date & Time
+                        </th>
+
+                        <th>
+                            Transaction Type
+                        </th>
+
+                        <th>
+                            Amount Details
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody
+                    id="cust-filtered-history-body"
+                ></tbody>
+
+            </table>
+
+
+        </div>
+
+
+
+        <!-- PAY DUE -->
+
+        <div
+            style="
+                background:#ffffff;
+                padding:15px;
+                border-radius:8px;
+                border:1px dashed #cbd5e1;
+                margin-top:20px;
+            "
+        >
+
+            <h4
+                style="
+                    margin:0 0 10px 0;
+                    color:#1e293b;
+                "
+            >
+                💳 Pay Customer Due Amount (BDT ৳)
+            </h4>
+
+
+            <div
+                class="form-row"
+                style="margin:0;"
+            >
+
+
+                <div
+                    class="form-group"
+                    style="
+                        margin:0;
+                        flex:2;
+                    "
+                >
+
+                    <input
+                        type="number"
+                        id="pay-due-input"
+                        step="0.01"
+                        min="0.01"
+                        placeholder="Enter Amount to Pay (BDT ৳)"
+                    >
+
+                </div>
+
+
+                <div
+                    class="form-group"
+                    style="
+                        margin:0;
+                        flex:1;
+                    "
+                >
+
+                    <button
+                        class="btn"
+                        style="
+                            background:#10b981;
+                            color:white;
+                            width:100%;
+                            height:100%;
+                        "
+                        onclick="submitDuePayment()"
+                    >
+                        Save Due Payment
+                    </button>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     3. SUPER ADMIN
+========================================================= -->
+
+<section
+    id="super-admin-reset-panel"
+    class="super-admin-box"
+>
+
+    <h3
+        style="
+            margin-top:0;
+            color:#be123c;
+        "
+    >
+        ⚡ Super Admin Special Action:
+        Reset / Clear User Account
+    </h3>
+
+
+    <p
+        style="
+            font-size:13px;
+            color:#881337;
+            margin-bottom:15px;
+        "
+    >
+        Warning: Clearing account or due balance
+        will reset records to ৳ 0.00 immediately.
+    </p>
+
+
+    <div
+        class="form-row"
+        style="align-items:flex-end;"
+    >
+
+
+        <div
+            class="form-group"
+            style="flex:2;"
+        >
+
+            <label>
+                Select Account to Clear
+            </label>
+
+            <select
+                id="super-clear-user-select"
+            ></select>
+
+        </div>
+
+
+        <div
+            class="form-group"
+            style="flex:1;"
+        >
+
+            <button
+                type="button"
+                class="btn"
+                style="
+                    background:#dc2626;
+                    color:white;
+                    width:100%;
+                    padding:11px;
+                "
+                onclick="clearUserWalletBalance()"
+            >
+                Clear Wallet (Set ৳0)
+            </button>
+
+        </div>
+
+
+        <div
+            class="form-group"
+            style="flex:1;"
+        >
+
+            <button
+                type="button"
+                class="btn"
+                style="
+                    background:#b91c1c;
+                    color:white;
+                    width:100%;
+                    padding:11px;
+                "
+                onclick="clearUserDueAccount()"
+            >
+                Clear Due Account (Set ৳0)
+            </button>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     4. CUSTOMER MASTER DASHBOARD
+========================================================= -->
+
+<section
+    class="card-box"
+    id="balance-master-dashboard-section"
+    style="margin-top:25px;"
+>
+
+    <h3>
+        Customer Balances & Due Statement Dashboard
+    </h3>
+
+
+    <div
+        class="table-responsive"
+        style="margin-top:15px;"
+    >
+
+        <table class="data-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        User Name
+                    </th>
+
+                    <th>
+                        Role
+                    </th>
+
+                    <th>
+                        Wallet Balance (BDT)
+                    </th>
+
+                    <th>
+                        Total Due
+                    </th>
+
+                    <th>
+                        Paid Amount
+                    </th>
+
+                    <th>
+                        Remaining Due
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody
+                id="balance-table-body"
+            ></tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     5. SYSTEM LEDGER
+========================================================= -->
+
+<section
+    class="card-box"
+    id="balance-system-ledger-section"
+    style="margin-top:25px;"
+>
+
+    <div
+        style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            flex-wrap:wrap;
+            gap:10px;
+        "
+    >
+
+        <h3 style="margin:0;">
+            System Activity Ledger Log
+            (All Records with Time)
+        </h3>
+
+
+        <button
+            id="super-admin-clear-ledger-btn"
+            class="btn"
+            style="
+                background:#991b1b;
+                color:white;
+                display:none;
+                padding:6px 14px;
+                font-size:13px;
+            "
+            onclick="clearAllSystemLedger()"
+        >
+            🗑️ Clear All Activity Logs
+            (Super Admin)
+        </button>
+
+    </div>
+
+
+    <div
+        class="table-responsive"
+        style="margin-top:15px;"
+    >
+
+        <table class="data-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Date & Time
+                    </th>
+
+                    <th>
+                        Customer
+                    </th>
+
+                    <th>
+                        Activity Type
+                    </th>
+
+                    <th>
+                        Details / Amount
+                    </th>
+
+                    <th>
+                        Note / Status
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody
+                id="ledger-history-body"
+            ></tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+</div>
+
+
+
+<script>
+
+
+// ============================================================
+// GLOBAL
+// ============================================================
+
+let currentSearchedUserId = null;
+
+
+// ============================================================
+// PAGE LOAD
+// ============================================================
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    /*
+     * First migrate old ledger recharge records.
+     * This helps recover previous Paid/Due recharge records.
+     */
+    migrateOldBalanceRecords();
+
+
+    loadUserDropdowns();
+
+    renderBalanceTable();
+
+    renderLedgerHistory();
+
+    checkSuperAdminAccess();
+
+    applyBalancePageRoleUI();
+
+});
+
+
+// ============================================================
+// BALANCE FINANCIAL RECORD STORAGE
+// ============================================================
+
+function getBalanceRequests() {
+
+    return JSON.parse(
+        localStorage.getItem(
+            'takago_balance_requests'
+        )
+    ) || [];
+
+}
+
+
+function saveBalanceRequests(records) {
+
+    localStorage.setItem(
+        'takago_balance_requests',
+        JSON.stringify(records)
+    );
+
+}
+
+
+// ============================================================
+// SAVE FINANCIAL BALANCE RECORD
+// ============================================================
+
+function saveBalanceFinancialRecord({
+
+    userId,
+    userName,
+    username,
+    amount,
+    type
+
+}) {
+
+    const records =
+        getBalanceRequests();
+
+
+    const now =
+        new Date();
+
+
+    records.push({
+
+        id: Date.now(),
+
+        userId: userId,
+
+        userName: userName,
+
+        username: username,
+
+        amount: parseFloat(amount),
+
+        /*
+         * PAID
+         * DUE
+         * DUE_PAYMENT
+         */
+        type: type,
+
+        status: "approved",
+
+        createdAt:
+            now.toISOString(),
+
+        timestamp:
+            now.toLocaleString(
+                'en-US',
+                {
+                    dateStyle: 'medium',
+                    timeStyle: 'short'
+                }
+            )
+
+    });
+
+
+    saveBalanceRequests(records);
+
+}
+
+
+// ============================================================
+// MIGRATE OLD LEDGER DATA
+// ============================================================
+//
+// আপনার আগে যেসব recharge করা হয়েছে,
+// সেগুলোর ledger record থাকলে একবার
+// financial records-এ নিয়ে আসবে.
+//
+// যাতে আগের Paid Cash / Due recharge হারিয়ে না যায়.
+// ============================================================
+
+function migrateOldBalanceRecords() {
+
+    const migrationKey =
+        'takago_balance_records_migrated_v1';
+
+
+    /*
+     * Already migrated?
+     */
+    if (
+        localStorage.getItem(
+            migrationKey
+        ) === 'yes'
+    ) {
+        return;
+    }
+
+
+    const ledger =
+        JSON.parse(
+            localStorage.getItem(
+                'takago_ledger_history'
+            )
+        ) || [];
+
+
+    const existing =
+        getBalanceRequests();
+
+
+    const migratedIds =
+        new Set(
+            existing.map(
+                record =>
+                    String(record.legacyLedgerId || '')
+            )
+        );
+
+
+    let changed = false;
+
+
+    ledger.forEach(log => {
+
+        let financialType = null;
+
+
+        /*
+         * Old Paid recharge
+         */
+        if (
+            log.type ===
+            'Recharge (Paid Cash)'
+        ) {
+
+            financialType =
+                'PAID';
+
+        }
+
+
+        /*
+         * Old Due recharge
+         */
+        if (
+            log.type ===
+            'Recharge (On Due)'
+        ) {
+
+            financialType =
+                'DUE';
+
+        }
+
+
+        /*
+         * Old Due Payment
+         */
+        if (
+            log.type ===
+            'Due Payment Received'
+        ) {
+
+            financialType =
+                'DUE_PAYMENT';
+
+        }
+
+
+        if (!financialType) {
+            return;
+        }
+
+
+        const legacyId =
+            String(
+                log.id ||
+                (
+                    log.userId +
+                    '_' +
+                    log.timestamp +
+                    '_' +
+                    log.amountDetails
+                )
+            );
+
+
+        if (
+            migratedIds.has(
+                legacyId
+            )
+        ) {
+            return;
+        }
+
+
+        /*
+         * Extract amount from amountDetails.
+         */
+        const match =
+            String(
+                log.amountDetails || ''
+            ).match(
+                /([\d,]+(?:\.\d+)?)/
+            );
+
+
+        if (!match) {
+            return;
+        }
+
+
+        const amount =
+            parseFloat(
+                match[1].replace(
+                    /,/g,
+                    ''
+                )
+            );
+
+
+        if (
+            !amount ||
+            amount <= 0
+        ) {
+            return;
+        }
+
+
+        existing.push({
+
+            id:
+                Date.now() +
+                Math.floor(
+                    Math.random() * 100000
+                ),
+
+            legacyLedgerId:
+                legacyId,
+
+            userId:
+                parseInt(
+                    log.userId
+                ) || 0,
+
+            userName:
+                log.userName || '',
+
+            amount:
+                amount,
+
+            type:
+                financialType,
+
+            status:
+                "approved",
+
+            createdAt:
+                log.isoDate ||
+                new Date().toISOString(),
+
+            timestamp:
+                log.timestamp || ''
+
+        });
+
+
+        changed = true;
+
+    });
+
+
+    if (changed) {
+
+        saveBalanceRequests(
+            existing
+        );
+
+    }
+
+
+    /*
+     * Mark migration complete.
+     */
+    localStorage.setItem(
+        migrationKey,
+        'yes'
+    );
+
+}
+
+
+// ============================================================
+// ROLE UI
+// ============================================================
+
+function applyBalancePageRoleUI() {
+
+    const currentUser =
+        JSON.parse(
+            localStorage.getItem(
+                'takago_current_user'
+            )
+        );
+
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    const userRole =
+        (
+            currentUser.role || ''
+        )
+        .toLowerCase()
+        .trim();
+
+
+    if (
+        userRole === 'admin'
+    ) {
+
+        const ledgerSection =
+            document.getElementById(
+                "balance-system-ledger-section"
+            );
+
+
+        if (ledgerSection) {
+
+            ledgerSection.style.setProperty(
+                'display',
+                'none',
+                'important'
+            );
+
+        }
+
+
+        const masterDashboardSection =
+            document.getElementById(
+                "balance-master-dashboard-section"
+            );
+
+
+        if (
+            masterDashboardSection
+        ) {
+
+            masterDashboardSection.style.setProperty(
+                'display',
+                'none',
+                'important'
+            );
+
+        }
+
+    }
+
+}
+
+
+// ============================================================
+// SUPER ADMIN ACCESS
+// ============================================================
+
+function checkSuperAdminAccess() {
+
+    const currentUser =
+        JSON.parse(
+            localStorage.getItem(
+                'takago_current_user'
+            )
+        );
+
+
+    if (
+        currentUser &&
+        currentUser.role ===
+        'superadmin'
+    ) {
+
+        const panel =
+            document.getElementById(
+                "super-admin-reset-panel"
+            );
+
+
+        if (panel) {
+            panel.style.display =
+                "block";
+        }
+
+
+        const clearBtn =
+            document.getElementById(
+                "super-admin-clear-ledger-btn"
+            );
+
+
+        if (clearBtn) {
+            clearBtn.style.display =
+                "inline-block";
+        }
+
+    }
+
+}
+
+
+// ============================================================
+// SYSTEM LEDGER
+// ============================================================
+
+function getSystemLedger() {
+
+    return JSON.parse(
+        localStorage.getItem(
+            'takago_ledger_history'
+        )
+    ) || [];
+
+}
+
+
+function saveLedgerEntry(entry) {
+
+    const history =
+        getSystemLedger();
+
+
+    const now =
+        new Date();
+
+
+    entry.timestamp =
+        now.toLocaleString(
+            'en-US',
+            {
+                dateStyle: 'medium',
+                timeStyle: 'short'
+            }
+        );
+
+
+    entry.isoDate =
+        now.toISOString()
+            .split('T')[0];
+
+
+    history.unshift(entry);
+
+
+    localStorage.setItem(
+        'takago_ledger_history',
+        JSON.stringify(history)
+    );
+
+
+    renderLedgerHistory();
+
+}
+
+
+// ============================================================
+// USER DROPDOWNS
+// ============================================================
+
+function loadUserDropdowns() {
+
+    const users =
+        JSON.parse(
+            localStorage.getItem(
+                'takago_users'
+            )
+        ) || [];
+
+
+    const balSelect =
+        document.getElementById(
+            "bal-user-select"
+        );
+
+
+    const searchSelect =
+        document.getElementById(
+            "search-user-select"
+        );
+
+
+    const superSelect =
+        document.getElementById(
+            "super-clear-user-select"
+        );
+
+
+    balSelect.innerHTML =
+        '<option value="">-- Select Customer --</option>';
+
+
+    searchSelect.innerHTML =
+        '<option value="">-- Select Customer --</option>';
+
+
+    if (superSelect) {
+
+        superSelect.innerHTML =
+            '<option value="">-- Select Customer --</option>';
+
+    }
+
+
+    users.forEach(u => {
+
+
+        const opt1 =
+            document.createElement(
+                "option"
+            );
+
+
+        opt1.value =
+            u.id;
+
+
+        opt1.innerText =
+            `${u.name} (@${u.username})`;
+
+
+        balSelect.appendChild(
+            opt1
+        );
+
+
+
+        const opt2 =
+            document.createElement(
+                "option"
+            );
+
+
+        opt2.value =
+            u.id;
+
+
+        opt2.innerText =
+            `${u.name} (@${u.username})`;
+
+
+        searchSelect.appendChild(
+            opt2
+        );
+
+
+
+        if (superSelect) {
+
+            const opt3 =
+                document.createElement(
+                    "option"
+                );
+
+
+            opt3.value =
+                u.id;
+
+
+            opt3.innerText =
+                `${u.name} (@${u.username})`;
+
+
+            superSelect.appendChild(
+                opt3
+            );
+
+        }
+
+    });
+
+}
+
+
+// ============================================================
+// ADD / RECHARGE USER BALANCE
+// ============================================================
+
+function handleAddUserBalance(e) {
+    if (e) e.preventDefault();
+
+    const userIdEl = document.getElementById("bal-user-select");
+    const amountEl = document.getElementById("bal-amount-input");
+    const methodEl = document.getElementById("bal-source-method");
+    const typeEl = document.getElementById("bal-type-select");
+
+    if (!userIdEl || !amountEl || !methodEl) {
+        alert("Balance form elements not found.");
+        return;
+    }
+
+    const userId = userIdEl.value;
+    const amount = parseFloat(amountEl.value || 0);
+    const sourceMethod = methodEl.value;
+    const payType = typeEl
+        ? String(typeEl.value || "PAID").toUpperCase()
+        : "PAID";
+
+    if (!userId) {
+        alert("Please select a user!");
+        return;
+    }
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+        alert("Please enter a valid amount!");
+        return;
+    }
+
+    const method = takaGoNormalizeMethod(sourceMethod);
+    const users = takaGoGetUsers();
+    const targetUser = users.find(function(u) {
+        return String(u.id) === String(userId);
+    });
+
+    if (!targetUser) {
+        alert("User not found!");
+        return;
+    }
+
+    const account = takaGoGetAdminFinancialAccount();
+    const available = parseFloat(account.balances[method] || 0);
+
+    if (available < amount) {
+        alert(
+            "Insufficient Admin Balance!\n\n" +
+            "Source: " + method.toUpperCase() + "\n" +
+            "Available: ৳ " + available.toFixed(2) + "\n" +
+            "Required: ৳ " + amount.toFixed(2)
+        );
+        return;
+    }
+
+    if (!confirm(
+        "Give ৳ " + amount.toFixed(2) +
+        " to " + (targetUser.name || targetUser.username) +
+        " from " + method.toUpperCase() +
+        "?\n\nPayment Type: " + payType
+    )) {
+        return;
+    }
+
+    try {
+        const result = takaGoAdminGiveUserBalance(
+            userId,
+            amount,
+            method,
+            payType
+        );
+
+        /*
+         * IMPORTANT:
+         * Only ONE financial record is created for this transfer.
+         * The transfer metadata is saved so a later Delete can reverse
+         * both Admin and User wallet balances correctly.
+         */
+        const records = getBalanceRequests();
+        const transfer = window.TAKA_GO_LAST_TRANSFER || {};
+
+        records.push({
+            id: transfer.transferId || ("BAL-" + Date.now()),
+            transferId: transfer.transferId || null,
+
+            userId: result.user.id,
+            userName: result.user.name,
+            username: result.user.username,
+
+            amount: amount,
+            type: payType === "DUE" ? "DUE" : "PAID",
+            paymentType: payType === "DUE" ? "DUE" : "PAID",
+
+            sourceMethod: result.method,
+            sourceAccount: result.method,
+
+            status: "approved",
+
+            createdAt:
+                transfer.timestamp ||
+                new Date().toISOString(),
+
+            timestamp:
+                new Date().toLocaleString("en-US", {
+                    dateStyle: "medium",
+                    timeStyle: "short"
+                }),
+
+            adminId: transfer.adminId,
+            adminUsername: transfer.adminUsername,
+
+            adminMethodBalanceBefore:
+                transfer.adminMethodBefore,
+
+            adminMethodBalanceAfter:
+                transfer.adminMethodAfter,
+
+            adminBalanceBefore:
+                transfer.adminTotalBefore,
+
+            adminBalanceAfter:
+                transfer.adminTotalAfter,
+
+            userMethodBalanceBefore:
+                transfer.userMethodBefore,
+
+            userMethodBalanceAfter:
+                transfer.userMethodAfter,
+
+            userBalanceBefore:
+                transfer.userTotalBefore,
+
+            userBalanceAfter:
+                transfer.userTotalAfter,
+
+            dueBefore:
+                transfer.dueBefore,
+
+            dueAfter:
+                transfer.dueAfter,
+
+            reversible: true,
+            deleted: false
+        });
+
+        saveBalanceRequests(records);
+
+        if (typeof saveLedgerEntry === "function") {
+            saveLedgerEntry({
+                id: Date.now() + 2,
+                userId: result.user.id,
+                userName: result.user.name,
+                type:
+                    payType === "DUE"
+                        ? "Recharge (On Due)"
+                        : "Recharge (Paid)",
+                amountDetails:
+                    "+৳ " +
+                    amount.toFixed(2) +
+                    " via " +
+                    result.method.toUpperCase(),
+                status:
+                    payType === "DUE"
+                        ? "Pending Due"
+                        : "Completed",
+                sourceMethod: result.method,
+                transferId: result.transferId
+            });
+        }
+
+        const form = document.getElementById("addBalanceForm");
+        if (form) form.reset();
+
+        renderBalanceTable();
+
+        if (
+            typeof currentSearchedUserId !== "undefined" &&
+            currentSearchedUserId === Number(userId)
+        ) {
+            searchUserProfile();
+        }
+
+        if (typeof renderNavbarByRole === "function") {
+            renderNavbarByRole();
+        }
+
+        if (typeof renderAdminNetBalanceDashboard === "function") {
+            renderAdminNetBalanceDashboard();
+        }
+
+        alert(
+            "Balance Transfer Successful!\n\n" +
+            "User: " +
+            (result.user.name || result.user.username) +
+            "\nSource: " +
+            result.method.toUpperCase() +
+            "\nAdded: ৳ " +
+            amount.toFixed(2) +
+            "\nPayment Type: " +
+            payType +
+            "\n\nAdmin " +
+            result.method.toUpperCase() +
+            " Left: ৳ " +
+            result.adminMethodBalance.toFixed(2) +
+            "\nUser " +
+            result.method.toUpperCase() +
+            ": ৳ " +
+            result.userMethodBalance.toFixed(2) +
+            "\nUser Total: ৳ " +
+            result.userTotalBalance.toFixed(2) +
+            "\nTotal Due: ৳ " +
+            result.dueBalance.toFixed(2)
+        );
+
+        window.dispatchEvent(new Event("storage"));
+    } catch (error) {
+        alert(error.message || "Balance transfer failed.");
+    }
+}
+
+
+// ============================================================
+// SEARCH USER PROFILE
+
+// ============================================================
+
+function searchUserProfile() {
+
+    const userId =
+        parseInt(
+            document.getElementById(
+                "search-user-select"
+            ).value
+        );
+
+
+    if (!userId) {
+
+        alert(
+            "Please select a customer first!"
+        );
+
+        return;
+    }
+
+
+    const users =
+        JSON.parse(
+            localStorage.getItem(
+                'takago_users'
+            )
+        ) || [];
+
+
+    const user =
+        users.find(
+            u => u.id === userId
+        );
+
+
+    if (!user) {
+        return;
+    }
+
+
+    currentSearchedUserId =
+        user.id;
+
+
+    takaGoEnsureUserWallet(user);
+
+    const bdtBal =
+        takaGoUserTotalBalance(user);
+
+
+    const dueAmt =
+        user.dues
+            ? parseFloat(
+                user.dues.amount || 0
+            )
+            : 0;
+
+
+    const paidAmt =
+        user.dues
+            ? parseFloat(
+                user.dues.paid || 0
+            )
+            : 0;
+
+
+    const remaining =
+        Math.max(
+            0,
+            dueAmt - paidAmt
+        );
+
+
+    document.getElementById(
+        "prof-name"
+    ).innerText =
+        user.name;
+
+
+    document.getElementById(
+        "prof-username"
+    ).innerText =
+        `@${user.username}`;
+
+
+    document.getElementById(
+        "prof-wallet"
+    ).innerText =
+        `৳ ${bdtBal.toFixed(2)}`;
+
+
+
+    ["bkash","nagad","bank","recharge","rocket","other"].forEach(function(method) {
+        const el = document.getElementById("prof-" + method);
+        if (el) {
+            el.innerText = "৳ " +
+                parseFloat(user.walletBalances[method] || 0).toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+        }
+    });
+
+    document.getElementById(
+        "prof-due"
+    ).innerText =
+        `৳ ${dueAmt.toFixed(2)}`;
+
+
+    document.getElementById(
+        "prof-paid"
+    ).innerText =
+        `৳ ${paidAmt.toFixed(2)}`;
+
+
+    document.getElementById(
+        "prof-remaining"
+    ).innerText =
+        `৳ ${remaining.toFixed(2)}`;
+
+
+    document.getElementById(
+        "pdf-gen-time"
+    ).innerText =
+        "Printed: " +
+        new Date().toLocaleString();
+
+
+    document.getElementById(
+        "customer-profile-card"
+    ).style.display =
+        "block";
+
+
+    document.getElementById(
+        "pdf-start-date"
+    ).value = "";
+
+
+    document.getElementById(
+        "pdf-end-date"
+    ).value = "";
+
+
+    filterCustomerHistory();
+
+}
+
+
+// ============================================================
+// CUSTOMER HISTORY
+// ============================================================
+
+function filterCustomerHistory() {
+
+    if (
+        !currentSearchedUserId
+    ) {
+        return;
+    }
+
+
+    const startDate =
+        document.getElementById(
+            "pdf-start-date"
+        ).value;
+
+
+    const endDate =
+        document.getElementById(
+            "pdf-end-date"
+        ).value;
+
+
+    const allLogs =
+        getSystemLedger();
+
+
+    const tbody =
+        document.getElementById(
+            "cust-filtered-history-body"
+        );
+
+
+    tbody.innerHTML = "";
+
+
+    const userLogs =
+        allLogs.filter(log => {
+
+            if (
+                log.userId !==
+                currentSearchedUserId
+            ) {
+                return false;
+            }
+
+
+            if (log.isoDate) {
+
+                if (
+                    startDate &&
+                    log.isoDate <
+                    startDate
+                ) {
+                    return false;
+                }
+
+
+                if (
+                    endDate &&
+                    log.isoDate >
+                    endDate
+                ) {
+                    return false;
+                }
+
+            }
+
+
+            return true;
+
+        });
+
+
+    if (
+        userLogs.length === 0
+    ) {
+
+        tbody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="4"
+                    style="
+                        text-align:center;
+                        color:#94a3b8;
+                        padding:10px;
+                    "
+                >
+                    No transaction records found
+                    for the selected date range.
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+    }
+
+
+    userLogs.forEach(log => {
+
+        const tr =
+            document.createElement(
+                "tr"
+            );
+
+
+        tr.innerHTML = `
+
+            <td
+                style="
+                    padding:8px;
+                    border-bottom:1px solid #cbd5e1;
+                "
+            >
+                <small>
+                    ${log.timestamp}
+                </small>
+            </td>
+
+
+            <td
+                style="
+                    padding:8px;
+                    border-bottom:1px solid #cbd5e1;
+                "
+            >
+                <strong>
+                    ${log.type}
+                </strong>
+            </td>
+
+
+            <td
+                style="
+                    padding:8px;
+                    border-bottom:1px solid #cbd5e1;
+                "
+            >
+                ${log.amountDetails}
+            </td>
+
+
+            <td
+                style="
+                    padding:8px;
+                    border-bottom:1px solid #cbd5e1;
+                "
+            >
+
+                <span
+                    class="badge"
+                    style="
+                        background:#059669;
+                        color:white;
+                        padding:3px 8px;
+                        font-size:11px;
+                    "
+                >
+                    ${log.status}
+                </span>
+
+            </td>
+
+        `;
+
+
+        tbody.appendChild(tr);
+
+    });
+
+}
+
+
+// ============================================================
+// PDF
+// ============================================================
+
+function downloadCustomerPDFReport() {
+
+    if (
+        !currentSearchedUserId
+    ) {
+        return;
+    }
+
+
+    const element =
+        document.getElementById(
+            'printable-pdf-area'
+        );
+
+
+    const userName =
+        document.getElementById(
+            "prof-name"
+        ).innerText;
+
+
+    const filename =
+        `TAKA_GO_Statement_${userName.replace(
+            /\s+/g,
+            '_'
+        )}.pdf`;
+
+
+    const opt = {
+
+        margin: 0.4,
+
+        filename: filename,
+
+        image: {
+            type: 'jpeg',
+            quality: 0.98
+        },
+
+        html2canvas: {
+            scale: 2
+        },
+
+        jsPDF: {
+            unit: 'in',
+            format: 'letter',
+            orientation: 'portrait'
+        }
+
+    };
+
+
+    html2pdf()
+        .set(opt)
+        .from(element)
+        .save();
+
+}
+
+
+// ============================================================
+// PAY DUE
+// ============================================================
+
+function submitDuePayment() {
+
+    if (
+        !currentSearchedUserId
+    ) {
+        alert(
+            "Please search/select a customer first."
+        );
+
+        return;
+    }
+
+
+    const payAmt =
+        parseFloat(
+            document.getElementById(
+                "pay-due-input"
+            ).value
+        ) || 0;
+
+
+    if (
+        payAmt <= 0
+    ) {
+
+        alert(
+            "Please enter a valid payment amount!"
+        );
+
+        return;
+    }
+
+
+    let users =
+        JSON.parse(
+            localStorage.getItem(
+                'takago_users'
+            )
+        ) || [];
+
+
+    const userIndex =
+        users.findIndex(
+            u =>
+                u.id ===
+                currentSearchedUserId
+        );
+
+
+    if (
+        userIndex === -1
+    ) {
+
+        alert(
+            "User not found!"
+        );
+
+        return;
+    }
+
+
+    const user =
+        users[userIndex];
+
+
+    if (!user.dues) {
+
+        user.dues = {
+
+            amount: 0,
+
+            paid: 0
+
+        };
+
+    }
+
+
+    const dueAmount =
+        parseFloat(
+            user.dues.amount || 0
+        );
+
+
+    const alreadyPaid =
+        parseFloat(
+            user.dues.paid || 0
+        );
+
+
+    const remainingDue =
+        Math.max(
+            0,
+            dueAmount - alreadyPaid
+        );
+
+
+    /*
+     * Cannot pay more than remaining due.
+     */
+
+    if (
+        payAmt >
+        remainingDue
+    ) {
+
+        alert(
+            `Payment cannot exceed remaining due.\n\nRemaining Due: ৳ ${remainingDue.toFixed(2)}`
+        );
+
+        return;
+    }
+
+
+    /*
+     * Increase user's paid due.
+     */
+
+    user.dues.paid =
+        alreadyPaid +
+        payAmt;
+
+
+    localStorage.setItem(
+        'takago_users',
+        JSON.stringify(users)
+    );
+
+
+    /*
+     * ========================================================
+     * IMPORTANT FINANCIAL RECORD
+     * ========================================================
+     *
+     * Due payment:
+     *
+     * Total Due    -> MINUS
+     * Receivable   -> PLUS
+     *
+     */
+
+    saveBalanceFinancialRecord({
+
+        userId:
+            user.id,
+
+        userName:
+            user.name,
+
+        username:
+            user.username,
+
+        amount:
+            payAmt,
+
+        type:
+            'DUE_PAYMENT'
+
+    });
+
+
+    /*
+     * Ledger
+     */
+
+    saveLedgerEntry({
+
+        id:
+            Date.now(),
+
+        userId:
+            user.id,
+
+        userName:
+            user.name,
+
+        type:
+            'Due Payment Received',
+
+        amountDetails:
+            `Paid ৳ ${payAmt.toFixed(2)} BDT`,
+
+        status:
+            'Payment Clear'
+
+    });
+
+
+    alert(
+        `Recorded due payment of ৳ ${payAmt.toFixed(2)} for ${user.name}`
+    );
+
+
+    document.getElementById(
+        "pay-due-input"
+    ).value = "";
+
+
+    searchUserProfile();
+
+
+    renderBalanceTable();
+
+
+    /*
+     * Refresh financial dashboard.
+     */
+
+    if (
+        typeof renderAdminNetBalanceDashboard ===
+        'function'
+    ) {
+
+        renderAdminNetBalanceDashboard();
+
+    }
+
+}
+
+
+// ============================================================
+// CLEAR ALL SYSTEM LEDGER
+// ============================================================
+
+function clearAllSystemLedger() {
+
+    const currentUser =
+        JSON.parse(
+            localStorage.getItem(
+                'takago_current_user'
+            )
+        );
+
+
+    if (
+        !currentUser ||
+        currentUser.role !==
+        'superadmin'
+    ) {
+
+        alert(
+            "Access Denied! Only Super Admin can perform this action."
+        );
+
+        return;
+    }
+
+
+    const step1 =
+        confirm(
+            "🚨 WARNING: Are you sure you want to PERMANENTLY CLEAR all System Activity Ledger Logs?\n\nThis action cannot be undone!"
+        );
+
+
+    if (!step1) {
+        return;
+    }
+
+
+    const step2 =
+        prompt(
+            "Type 'DELETE' in capital letters below to confirm log wipeout:"
+        );
+
+
+    if (
+        step2 ===
+        'DELETE'
+    ) {
+
+        localStorage.setItem(
+            'takago_ledger_history',
+            JSON.stringify([])
+        );
+
+
+        alert(
+            "All System Activity Ledger Logs have been successfully cleared!"
+        );
+
+
+        renderLedgerHistory();
+
+
+        if (
+            currentSearchedUserId
+        ) {
+
+            filterCustomerHistory();
+
+        }
+
+    } else {
+
+        alert(
+            "Verification failed! Operation cancelled."
+        );
+
+    }
+
+}
+
+
+// ============================================================
+// CLEAR USER WALLET
+// ============================================================
+
+function clearUserWalletBalance() {
+    const select = document.getElementById("super-clear-user-select");
+
+    const userId = select
+        ? parseInt(select.value)
+        : 0;
+
+    if (!userId) {
+        alert("Please select a customer first!");
+        return;
+    }
+
+    const users = takaGoGetUsers();
+
+    const index = users.findIndex(function(u) {
+        return String(u.id) === String(userId);
+    });
+
+    if (index === -1) {
+        alert("User account not found.");
+        return;
+    }
+
+    const user = takaGoEnsureUserWallet(users[index]);
+
+    const oldBal = takaGoUserTotalBalance(user);
+
+    if (!confirm(
+        `⚠️ SUPER ADMIN CONFIRMATION ⚠️\n\n` +
+        `Are you sure you want to CLEAR the Wallet Balance of user: "${user.name}" (@${user.username})?\n\n` +
+        `This will set ALL wallet methods to ৳ 0.00.\n\n` +
+        `Financial Paid/Due records will NOT be deleted.`
+    )) {
+        return;
+    }
+
+    // CRITICAL FIX:
+    // Clear every method wallet, not only bdtBalance.
+    TAKAGO_WALLET_METHODS.forEach(function(method) {
+        user.walletBalances[method] = 0;
+    });
+
+    user.bdtBalance = 0;
+
+    takaGoSaveUsers(users);
+    takaGoSyncCurrentUser(user);
+
+    if (typeof saveLedgerEntry === "function") {
+        saveLedgerEntry({
+            id: Date.now(),
+            userId: user.id,
+            userName: user.name,
+            type: "SUPER ADMIN: Clear Wallet",
+            amountDetails:
+                `Reset ৳ ${oldBal.toFixed(2)} to ৳ 0.00`,
+            status: "Cleared Zero"
+        });
+    }
+
+    renderBalanceTable();
+
+    if (
+        typeof currentSearchedUserId !== "undefined" &&
+        currentSearchedUserId === userId &&
+        typeof searchUserProfile === "function"
+    ) {
+        searchUserProfile();
+    }
+
+    if (typeof renderNavbarByRole === "function") {
+        renderNavbarByRole();
+    }
+
+    if (typeof renderAdminNetBalanceDashboard === "function") {
+        renderAdminNetBalanceDashboard();
+    }
+
+    alert(
+        `Wallet balance for ${user.name} has been successfully cleared to ৳ 0.00!`
+    );
+}
+
+
+// ============================================================
+// CLEAR USER DUE ACCOUNT
+// ============================================================
+
+function clearUserDueAccount() {
+
+    const userId =
+        parseInt(
+            document.getElementById(
+                "super-clear-user-select"
+            ).value
+        );
+
+
+    if (!userId) {
+
+        alert(
+            "Please select a customer first!"
+        );
+
+        return;
+    }
+
+
+    let users =
+        JSON.parse(
+            localStorage.getItem(
+                'takago_users'
+            )
+        ) || [];
+
+
+    const user =
+        users.find(
+            u => u.id === userId
+        );
+
+
+    if (!user) {
+        return;
+    }
+
+
+    const confirmClear =
+        confirm(
+            `⚠️ SUPER ADMIN CONFIRMATION ⚠️\n\nAre you sure you want to CLEAR the Entire Due Account for: "${user.name}" (@${user.username})?\n\nThis will reset Total Due and Paid Amount to ৳ 0.00.\n\nIMPORTANT: Existing Financial Dashboard records will NOT be deleted.`
+        );
+
+
+    if (!confirmClear) {
+        return;
+    }
+
+
+    const oldDue =
+        user.dues
+            ? parseFloat(
+                user.dues.amount || 0
+            )
+            : 0;
+
+
+    user.dues = {
+
+        amount: 0,
+
+        paid: 0
+
+    };
+
+
+    localStorage.setItem(
+        'takago_users',
+        JSON.stringify(users)
+    );
+
+
+    saveLedgerEntry({
+
+        id:
+            Date.now(),
+
+        userId:
+            user.id,
+
+        userName:
+            user.name,
+
+        type:
+            'SUPER ADMIN: Clear Due Ledger',
+
+        amountDetails:
+            `Reset Due (৳ ${oldDue.toFixed(2)}) to ৳ 0.00`,
+
+        status:
+            'Due Cleared Zero'
+
+    });
+
+
+    alert(
+        `Due ledger for ${user.name} has been successfully reset to zero!`
+    );
+
+
+    renderBalanceTable();
+
+
+    if (
+        currentSearchedUserId ===
+        userId
+    ) {
+
+        searchUserProfile();
+
+    }
+
+}
+
+
+// ============================================================
+// CUSTOMER BALANCE TABLE
+// ============================================================
+
+function renderBalanceTable() {
+
+    const tbody =
+        document.getElementById(
+            "balance-table-body"
+        );
+
+
+    if (!tbody) {
+        return;
+    }
+
+
+    const users =
+        JSON.parse(
+            localStorage.getItem(
+                'takago_users'
+            )
+        ) || [];
+
+
+    tbody.innerHTML = "";
+
+
+    users.forEach(u => {
+
+
+        const tr =
+            document.createElement(
+                "tr"
+            );
+
+
+        takaGoEnsureUserWallet(u);
+
+        const bdtBal =
+            takaGoUserTotalBalance(u);
+
+
+        const dueAmt =
+            u.dues
+                ? parseFloat(
+                    u.dues.amount || 0
+                )
+                : 0;
+
+
+        const paidAmt =
+            u.dues
+                ? parseFloat(
+                    u.dues.paid || 0
+                )
+                : 0;
+
+
+        const remaining =
+            Math.max(
+                0,
+                dueAmt - paidAmt
+            );
+
+
+        let statusBadge = "";
+
+
+        if (
+            dueAmt <= 0
+        ) {
+
+            statusBadge =
+                `<span
+                    class="badge"
+                    style="background:#10b981;"
+                >
+                    NO DUE
+                </span>`;
+
+        }
+
+
+        else if (
+            remaining <= 0
+        ) {
+
+            statusBadge =
+                `<span
+                    class="badge"
+                    style="background:#10b981;"
+                >
+                    PAID CLEAR
+                </span>`;
+
+        }
+
+
+        else {
+
+            statusBadge =
+                `<span
+                    class="badge"
+                    style="background:#ef4444;"
+                >
+                    DUE: ৳${remaining.toFixed(2)}
+                </span>`;
+
+        }
+
+
+        tr.innerHTML = `
+
+            <td>
+
+                <strong>
+                    ${u.name}
+                </strong>
+
+                <br>
+
+                <small class="text-muted">
+                    @${u.username}
+                </small>
+
+            </td>
+
+
+            <td>
+
+                <span
+                    class="badge"
+                    style="background:#6b7280;"
+                >
+                    ${(u.role || 'user').toUpperCase()}
+                </span>
+
+            </td>
+
+
+            <td>
+
+                <span
+                    class="badge"
+                    style="
+                        background:#10b981;
+                        color:#ffffff;
+                        font-weight:bold;
+                        padding:5px 10px;
+                    "
+                >
+                    ৳ ${bdtBal.toFixed(2)}
+                </span>
+
+                <br>
+
+                <small style="color:#64748b;line-height:1.6;">
+                    💚 ${parseFloat(u.walletBalances.bkash || 0).toFixed(2)}
+                    &nbsp; 🟠 ${parseFloat(u.walletBalances.nagad || 0).toFixed(2)}
+                    &nbsp; 🏦 ${parseFloat(u.walletBalances.bank || 0).toFixed(2)}
+                    <br>
+                    📱 ${parseFloat(u.walletBalances.recharge || 0).toFixed(2)}
+                    &nbsp; 🚀 ${parseFloat(u.walletBalances.rocket || 0).toFixed(2)}
+                    &nbsp; 💼 ${parseFloat(u.walletBalances.other || 0).toFixed(2)}
+                </small>
+
+            </td>
+
+
+            <td>
+                ৳ ${dueAmt.toFixed(2)}
+            </td>
+
+
+            <td>
+                ৳ ${paidAmt.toFixed(2)}
+            </td>
+
+
+            <td
+                style="
+                    font-weight:bold;
+                    color:
+                    ${
+                        remaining > 0
+                            ? '#ef4444'
+                            : '#10b981'
+                    };
+                "
+            >
+                ৳ ${remaining.toFixed(2)}
+            </td>
+
+
+            <td>
+                ${statusBadge}
+            </td>
+
+        `;
+
+
+        tbody.appendChild(
+            tr
+        );
+
+    });
+
+}
+
+
+// ============================================================
+// LEDGER HISTORY
+// ============================================================
+
+function renderLedgerHistory() {
+
+    const tbody =
+        document.getElementById(
+            "ledger-history-body"
+        );
+
+
+    if (!tbody) {
+        return;
+    }
+
+
+    const logs =
+        getSystemLedger();
+
+
+    tbody.innerHTML = "";
+
+
+    if (
+        logs.length === 0
+    ) {
+
+        tbody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="5"
+                    style="
+                        text-align:center;
+                        color:#94a3b8;
+                        padding:15px;
+                    "
+                >
+                    No Activity Log Found
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+    }
+
+
+    logs.forEach(log => {
+
+        const tr =
+            document.createElement(
+                "tr"
+            );
+
+
+        tr.innerHTML = `
+
+            <td>
+
+                <small
+                    style="color:#64748b;"
+                >
+                    ${log.timestamp}
+                </small>
+
+            </td>
+
+
+            <td>
+
+                <strong>
+                    ${log.userName || ''}
+                </strong>
+
+            </td>
+
+
+            <td>
+
+                <span
+                    class="badge"
+                    style="
+                        background:
+                        ${
+                            String(
+                                log.type || ''
+                            ).includes(
+                                'SUPER ADMIN'
+                            )
+                                ? '#dc2626'
+                                : '#3b82f6'
+                        };
+                    "
+                >
+                    ${log.type || ''}
+                </span>
+
+            </td>
+
+
+            <td>
+
+                <strong>
+                    ${log.amountDetails || ''}
+                </strong>
+
+            </td>
+
+
+            <td>
+
+                <span
+                    class="badge"
+                    style="background:#059669;"
+                >
+                    ${log.status || ''}
+                </span>
+
+            </td>
+
+        `;
+
+
+        tbody.appendChild(
+            tr
+        );
+
+    });
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAKA GO - Manage Roles & Passwords</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="auth.js"></script>
+    <script>checkPageAccess(['superadmin']);</script>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo">
+            <h2>TAKA<span class="go-tag">GO</span> Control</h2>
+        </div>
+        <nav class="nav-menu">
+            <a href="admin.html">Admin Panel</a>
+            <a href="balance-manage.html">Balance & Due Portal</a>
+            <a href="user-management.html" class="active">Manage Roles</a>
+            <span id="nav-role-links"></span>
+        </nav>
+        <div class="nav-actions" style="display: flex; align-items: center; gap: 10px;">
+            <span id="user-badge" style="font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: #e5e7eb; color: #374151;"></span>
+            <button class="btn" style="background: #ef4444; color: white;" onclick="handleLogout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="main-container" style="max-width: 950px; margin: 30px auto;">
+
+        <!-- Create User Form -->
+        <section class="card-box">
+            <h2 class="section-title">Create System User Account</h2>
+            <form id="createUserForm" onsubmit="createNewUser(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="new-name" required placeholder="e.g. Rahim Ahmed">
+                    </div>
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="new-username" required placeholder="e.g. rahim123">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="new-password" required placeholder="Set password">
+                    </div>
+                    <div class="form-group">
+                        <label>Assign Work Role</label>
+                        <select id="new-role" style="padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-weight: bold;">
+                            <option value="user">General User</option>
+                            <option value="admin">Admin</option>
+                            <option value="superadmin">Super Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Assigned Currency</label>
+                        <select id="new-currency" style="padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-weight: bold;">
+                            <option value="SAR">🇸🇦 Saudi Arabia (SAR)</option>
+                            <option value="AED">🇦🇪 UAE (AED)</option>
+                            <option value="MYR">🇲🇾 Malaysia (MYR)</option>
+                            <option value="QAR">🇶🇦 Qatar (QAR)</option>
+                            <option value="USD">🇺🇸 USA (USD)</option>
+                            <option value="GBP">🇬🇧 UK (GBP)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Initial Wallet Balance (Optional)</label>
+                    <input type="number" id="new-initial-balance" step="0.01" placeholder="0.00 (Leave blank for 0)">
+                </div>
+                <button type="submit" class="btn btn-primary">Create User Account</button>
+            </form>
+        </section>
+
+
+        <section class="card-box" style="margin-top:30px;">
+            <h3>💳 User Balance Profiles</h3>
+            <p style="color:#64748b;margin:5px 0 15px;">
+                Each user account shows where the BDT balance is currently stored.
+            </p>
+            <div
+                id="user-balance-profile-cards"
+                style="
+                    display:grid;
+                    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+                    gap:15px;
+                "
+            ></div>
+        </section>
+
+        <!-- System Users Inventory & Password Controls -->
+        <section class="card-box" style="margin-top: 30px;">
+            <h3>System Accounts & Password Management</h3>
+            <div class="table-responsive" style="margin-top: 15px;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Currency</th>
+                            <th>Password (Super Admin Only)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body">
+                        <!-- Accounts rendered dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function(){ renderUserTable(); renderUserBalanceProfiles(); });
+
+        function createNewUser(e) {
+            e.preventDefault();
+            const name = document.getElementById("new-name").value;
+            const username = document.getElementById("new-username").value.trim();
+            const password = document.getElementById("new-password").value;
+            const role = document.getElementById("new-role").value;
+            const assignedCurrency = document.getElementById("new-currency").value;
+            
+            // Optional Initial Balance Check
+            const initBalInput = document.getElementById("new-initial-balance").value;
+            const initialBalance = initBalInput !== "" ? parseFloat(initBalInput) : 0;
+
+            const users = JSON.parse(localStorage.getItem('takago_users')) || [];
+
+            if (users.some(u => u.username === username)) {
+                alert("Username already exists!");
+                return;
+            }
+
+            const balances = { SAR: 0, AED: 0, MYR: 0, QAR: 0, USD: 0, GBP: 0 };
+            balances[assignedCurrency] = initialBalance;
+
+            const newUser = {
+                id: Date.now(),
+                name,
+                username,
+                password,
+                role,
+                assignedCurrency,
+                balances: balances,
+                walletBalances: {
+                    bkash: 0,
+                    nagad: 0,
+                    bank: 0,
+                    recharge: 0,
+                    rocket: 0,
+                    other: initialBalance
+                },
+                bdtBalance: initialBalance,
+                dues: { amount: 0, paid: 0 }
+            };
+            
+            users.push(newUser);
+
+            localStorage.setItem('takago_users', JSON.stringify(users));
+            alert(`Account created for ${name} with initial balance ${initialBalance} ${assignedCurrency}!`);
+            
+            document.getElementById("createUserForm").reset();
+            renderUserTable();
+        }
+
+        function renderUserTable() {
+            const tbody = document.getElementById("user-table-body");
+            const users = JSON.parse(localStorage.getItem('takago_users')) || [];
+            const loggedUser = getFreshCurrentUser();
+            tbody.innerHTML = "";
+
+            users.forEach(u => {
+                const tr = document.createElement("tr");
+
+                // Password Display Control (Super Admin Exclusive)
+                let passDisplay = "*****";
+                if (loggedUser && loggedUser.role === 'superadmin') {
+                    passDisplay = `
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <input type="password" id="pass-inp-${u.id}" value="${u.password}" readonly style="width:90px; padding:2px 6px; border:1px solid #ddd; border-radius:4px; font-size:12px;">
+                            <button type="button" class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="togglePassVisibility(${u.id})">👁️</button>
+                        </div>
+                    `;
+                }
+
+                tr.innerHTML = `
+                    <td><strong>${u.name}</strong></td>
+                    <td>${u.username}</td>
+                    <td><span class="badge" style="background:${u.role === 'superadmin' ? '#7c3aed' : u.role === 'admin' ? '#2563eb' : '#6b7280'}">${u.role.toUpperCase()}</span></td>
+                    <td><span class="badge" style="background:#e0e7ff; color:#3730a3; font-weight:bold;">${u.assignedCurrency || 'SAR'}</span></td>
+                    <td>${passDisplay}</td>
+                    <td>
+                        <button class="btn btn-secondary btn-action" style="background:#059669; color:#fff;" onclick="promptChangePassword(${u.id})">Edit Pass</button>
+                        <button class="btn btn-action" style="background:var(--danger); color:#fff;" onclick="deleteUser(${u.id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderUserBalanceProfiles() {
+
+            const container =
+                document.getElementById("user-balance-profile-cards");
+
+            if (!container) return;
+
+            const users =
+                typeof takaGoGetUsers === "function"
+                    ? takaGoGetUsers()
+                    : (JSON.parse(localStorage.getItem("takago_users")) || []);
+
+            container.innerHTML = "";
+
+            users.forEach(function(user) {
+
+                if (typeof takaGoEnsureUserWallet === "function") {
+                    takaGoEnsureUserWallet(user);
+                }
+
+                const methods = [
+                    ["bkash", "💚 bKash"],
+                    ["nagad", "🟠 Nagad"],
+                    ["bank", "🏦 Bank"],
+                    ["recharge", "📱 Recharge"],
+                    ["rocket", "🚀 Rocket"],
+                    ["other", "💼 Other"]
+                ];
+
+                const card = document.createElement("div");
+
+                card.style.cssText =
+                    "background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 4px 15px rgba(15,23,42,.06);";
+
+                const rows = methods.map(function(item) {
+                    return `
+                        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f1f5f9;">
+                            <span>${item[1]}</span>
+                            <strong>৳ ${parseFloat(user.walletBalances[item[0]] || 0).toFixed(2)}</strong>
+                        </div>
+                    `;
+                }).join("");
+
+                card.innerHTML = `
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                        <div>
+                            <strong style="font-size:16px;">${user.name || "N/A"}</strong>
+                            <div style="font-size:12px;color:#64748b;">@${user.username || ""}</div>
+                        </div>
+                        <span class="badge">USER</span>
+                    </div>
+                    ${rows}
+                    <div style="display:flex;justify-content:space-between;padding-top:12px;font-size:16px;">
+                        <strong>Total Balance</strong>
+                        <strong style="color:#059669;">
+                            ৳ ${takaGoUserTotalBalance(user).toFixed(2)}
+                        </strong>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function togglePassVisibility(id) {
+            const inp = document.getElementById(`pass-inp-${id}`);
+            if (inp) {
+                inp.type = inp.type === "password" ? "text" : "password";
+            }
+        }
+
+        // Super Admin Password Update Handler
+        function promptChangePassword(userId) {
+            let users = JSON.parse(localStorage.getItem('takago_users')) || [];
+            const userIndex = users.findIndex(u => u.id === userId);
+
+            if (userIndex !== -1) {
+                const newPass = prompt(`Enter new password for ${users[userIndex].name}:`);
+                if (newPass && newPass.trim() !== "") {
+                    users[userIndex].password = newPass.trim();
+                    localStorage.setItem('takago_users', JSON.stringify(users));
+
+                    // Sync current logged user if updated
+                    const currentUser = JSON.parse(localStorage.getItem('takago_current_user'));
+                    if (currentUser && currentUser.id === userId) {
+                        localStorage.setItem('takago_current_user', JSON.stringify(users[userIndex]));
+                    }
+
+                    alert(`Password updated successfully for ${users[userIndex].name}!`);
+                    renderUserTable();
+                }
+            }
+        }
+
+        function deleteUser(id) {
+            let users = JSON.parse(localStorage.getItem('takago_users')) || [];
+            if (users.length <= 1) {
+                alert("Cannot delete primary account!");
+                return;
+            }
+            users = users.filter(u => u.id !== id);
+            localStorage.setItem('takago_users', JSON.stringify(users));
+            renderUserTable();
+        }
+    </script>
+</body>
+</html>

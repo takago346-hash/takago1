@@ -1,0 +1,2434 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TAKA GO - User Portal</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="auth.js"></script>
+    <script src="script.js"></script>
+
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- jsPDF AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        checkPageAccess(['user', 'admin', 'superadmin']);
+    </script>
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="logo">
+        <h2>
+            TAKA<span class="go-tag">GO</span>
+        </h2>
+    </div>
+
+    <nav class="nav-menu">
+        <a href="index.html" class="active">User View</a>
+        <span id="nav-role-links"></span>
+    </nav>
+
+    <div class="nav-actions" style="display:flex;align-items:center;gap:10px;">
+
+        <span
+            id="user-wallet-display"
+            style="
+                font-size:13px;
+                font-weight:600;
+                background:#f0fdf4;
+                padding:5px 10px;
+                border-radius:6px;
+                border:1px solid #bbf7d0;
+                color:#166534;
+            "
+        >
+            Wallet: ৳ 0.00
+        </span>
+
+        <span
+            id="user-badge"
+            style="
+                font-size:13px;
+                font-weight:600;
+                padding:4px 10px;
+                border-radius:20px;
+                background:#e5e7eb;
+                color:#374151;
+            "
+        ></span>
+
+        <button
+            class="btn"
+            style="background:#ef4444;color:white;"
+            onclick="handleLogout()"
+        >
+            Logout
+        </button>
+
+    </div>
+
+</header>
+
+
+<div
+    class="main-container"
+    style="max-width:1000px;margin:30px auto;padding:0 20px;"
+>
+
+
+<!-- =========================================================
+     NEW TRANSFER REQUEST
+========================================================= -->
+
+<section class="card-box">
+
+    <h2 class="section-title">
+        Submit New Transfer Request
+    </h2>
+
+
+    <form
+        id="transferRequestForm"
+        onsubmit="handleTransferRequest(event)"
+    >
+
+        <!-- Receiver Information -->
+
+        <div class="form-row">
+
+            <div class="form-group" style="flex:1;">
+
+                <label>
+                    Receiver Name
+                </label>
+
+                <input
+                    type="text"
+                    id="transfer-receiver-name"
+                    required
+                    placeholder="Receiver Full Name"
+                >
+
+            </div>
+
+
+            <div class="form-group" style="flex:1;">
+
+                <label>
+                    Receiver Account / Phone
+                </label>
+
+                <input
+                    type="text"
+                    id="transfer-receiver-acc"
+                    required
+                    placeholder="017XXXXXXXX"
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- Amount + Method -->
+
+        <div class="form-row">
+
+            <div class="form-group" style="flex:1;">
+
+                <label>
+                    Transfer Amount (BDT ৳)
+                </label>
+
+                <input
+                    type="number"
+                    id="transfer-bdt-amount"
+                    min="0.01"
+                    step="0.01"
+                    required
+                    placeholder="0.00"
+                    oninput="calculateWalletAmount()"
+                >
+
+            </div>
+
+
+            <div class="form-group" style="flex:1;">
+
+                <label>
+                    Payment Method
+                </label>
+
+                <select
+                    id="transfer-payment-method"
+                    onchange="handlePaymentMethodChange()"
+                >
+
+                    <option value="bKash">
+                        bKash
+                    </option>
+
+                    <option value="Nagad">
+                        Nagad
+                    </option>
+
+                    <option value="Rocket">
+                        Rocket
+                    </option>
+
+                    <option value="Mobile Recharge">
+                        Mobile Recharge
+                    </option>
+
+                    <option value="Bank">
+                        Bank Transfer
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             BANK INFORMATION
+        ====================================================== -->
+
+        <div
+            id="bank-transfer-fields"
+            style="
+                display:none;
+                margin-top:15px;
+                padding:15px;
+                border:1px solid #e2e8f0;
+                border-radius:8px;
+                background:#f8fafc;
+            "
+        >
+
+            <h4
+                style="
+                    margin:0 0 15px 0;
+                    color:#0f172a;
+                "
+            >
+                Bank Account Information
+            </h4>
+
+
+            <div class="form-row">
+
+                <div class="form-group" style="flex:1;">
+
+                    <label>
+                        Bank Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="bank-name"
+                        placeholder="Bank Name"
+                    >
+
+                </div>
+
+
+                <div class="form-group" style="flex:1;">
+
+                    <label>
+                        Account Number *
+                    </label>
+
+                    <input
+                        type="text"
+                        id="bank-account-number"
+                        placeholder="Account Number"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="form-row">
+
+                <div class="form-group" style="flex:1;">
+
+                    <label>
+                        Branch Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="bank-branch-name"
+                        placeholder="Branch Name"
+                    >
+
+                </div>
+
+
+                <div class="form-group" style="flex:1;">
+
+                    <label>
+                        SWIFT Code
+                        <small style="color:#64748b;">
+                            (Optional)
+                        </small>
+                    </label>
+
+                    <input
+                        type="text"
+                        id="bank-swift-code"
+                        placeholder="SWIFT Code"
+                    >
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Wallet Deduction -->
+
+        <div class="form-group">
+
+            <label>
+                Deducted from Wallet (BDT ৳)
+            </label>
+
+            <input
+                type="text"
+                id="transfer-bdt-display"
+                readonly
+                value="৳ 0.00"
+                style="
+                    background:#f8fafc;
+                    font-weight:bold;
+                    color:#dc2626;
+                "
+            >
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="btn btn-primary"
+            style="width:100%;"
+        >
+            Submit & Deduct Balance
+        </button>
+
+    </form>
+
+</section>
+
+
+
+
+<!-- =========================================================
+     MY BALANCE BY ACCOUNT
+========================================================= -->
+
+<section
+    class="card-box"
+    style="margin-top:25px;"
+>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div>
+            <h3 style="margin:0;">💳 My Balance Accounts</h3>
+            <small style="color:#64748b;">See exactly where your money is stored.</small>
+        </div>
+        <strong id="user-total-balance-card" style="color:#059669;">৳ 0.00</strong>
+    </div>
+
+    <div
+        id="user-method-balance-card"
+        style="
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(145px,1fr));
+            gap:12px;
+            margin-top:15px;
+        "
+    ></div>
+</section>
+
+
+<!-- =========================================================
+     TRANSFER HISTORY
+========================================================= -->
+
+<section
+    class="card-box"
+    style="margin-top:30px;"
+>
+
+    <div
+        style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:15px;
+            flex-wrap:wrap;
+            gap:10px;
+        "
+    >
+
+        <h3 style="margin:0;">
+            My Transfer Requests & Status
+        </h3>
+
+
+        <div
+            style="
+                display:flex;
+                gap:10px;
+                align-items:center;
+                flex-wrap:wrap;
+            "
+        >
+
+            <input
+                type="date"
+                id="user-pdf-filter-date"
+                style="
+                    padding:6px;
+                    border-radius:5px;
+                    border:1px solid #ccc;
+                    font-size:12px;
+                "
+            >
+
+
+            <button
+                onclick="downloadUserTransactionPDF()"
+                class="btn"
+                style="
+                    background:#2563eb;
+                    color:#fff;
+                    padding:6px 12px;
+                    border:none;
+                    border-radius:5px;
+                    cursor:pointer;
+                    font-size:12px;
+                    font-weight:bold;
+                "
+            >
+                Download All PDF
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div class="table-responsive">
+
+        <table class="data-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Date
+                    </th>
+
+                    <th>
+                        Receiver
+                    </th>
+
+                    <th>
+                        Amount
+                    </th>
+
+                    <th>
+                        Method
+                    </th>
+
+                    <th>
+                        Status & Pin
+                    </th>
+
+                    <th>
+                        PDF
+                    </th>
+
+                    <th>
+                        Action
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="user-transfer-history-body">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+</div>
+
+
+
+<script>
+
+/* =========================================================
+   PAGE LOAD
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        updateUserWalletHeader();
+
+        renderUserTransferHistory();
+
+        handlePaymentMethodChange();
+
+    }
+);
+
+
+
+/* =========================================================
+   WALLET HEADER
+========================================================= */
+
+function updateUserWalletHeader() {
+
+    const currentUser =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_current_user"
+            )
+        );
+
+    if (!currentUser) return;
+
+
+    const users =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_users"
+            )
+        ) || [];
+
+
+    const user =
+        users.find(
+            u =>
+                String(u.id) ===
+                String(currentUser.id)
+        );
+
+
+    if (user) {
+        takaGoEnsureUserWallet(user);
+    }
+
+    const balance =
+        user
+            ? takaGoUserTotalBalance(user)
+            : parseFloat(currentUser.bdtBalance || 0);
+
+
+    const display =
+        document.getElementById(
+            "user-wallet-display"
+        );
+
+
+    if (display) {
+
+        display.innerText =
+            `Wallet: ৳ ${balance.toFixed(2)}`;
+
+    }
+
+    const totalCard =
+        document.getElementById("user-total-balance-card");
+
+    if (totalCard) {
+        totalCard.innerText =
+            `৳ ${balance.toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })}`;
+    }
+
+    if (typeof renderUserBalanceCard === "function") {
+        renderUserBalanceCard();
+    }
+
+}
+
+
+
+/* =========================================================
+   AMOUNT CALCULATION
+========================================================= */
+
+function calculateWalletAmount() {
+
+    const amountInput =
+        document.getElementById(
+            "transfer-bdt-amount"
+        );
+
+    const display =
+        document.getElementById(
+            "transfer-bdt-display"
+        );
+
+
+    if (!amountInput || !display)
+        return;
+
+
+    const amount =
+        parseFloat(
+            amountInput.value
+        ) || 0;
+
+
+    display.value =
+        `৳ ${amount.toFixed(2)}`;
+
+}
+
+
+
+/* =========================================================
+   PAYMENT METHOD
+========================================================= */
+
+function handlePaymentMethodChange() {
+
+    const method =
+        document.getElementById(
+            "transfer-payment-method"
+        );
+
+    const bankFields =
+        document.getElementById(
+            "bank-transfer-fields"
+        );
+
+    const bankName =
+        document.getElementById(
+            "bank-name"
+        );
+
+    const accountNumber =
+        document.getElementById(
+            "bank-account-number"
+        );
+
+
+    if (!method || !bankFields)
+        return;
+
+
+    if (method.value === "Bank") {
+
+        bankFields.style.display =
+            "block";
+
+
+        if (accountNumber) {
+
+            accountNumber.required =
+                true;
+
+        }
+
+    } else {
+
+        bankFields.style.display =
+            "none";
+
+
+        if (accountNumber) {
+
+            accountNumber.required =
+                false;
+
+        }
+
+
+        if (bankName)
+            bankName.value = "";
+
+
+        if (accountNumber)
+            accountNumber.value = "";
+
+
+        const branch =
+            document.getElementById(
+                "bank-branch-name"
+            );
+
+
+        const swift =
+            document.getElementById(
+                "bank-swift-code"
+            );
+
+
+        if (branch)
+            branch.value = "";
+
+
+        if (swift)
+            swift.value = "";
+
+    }
+
+}
+
+
+
+/* =========================================================
+   SUBMIT TRANSFER
+========================================================= */
+
+function handleTransferRequest(event) {
+
+    event.preventDefault();
+
+    const currentUser = JSON.parse(
+        localStorage.getItem("takago_current_user")
+    );
+
+    if (!currentUser) {
+        alert("Please login first!");
+        return;
+    }
+
+    const receiverName =
+        document.getElementById("transfer-receiver-name")?.value.trim() || "";
+
+    const receiverAcc =
+        document.getElementById("transfer-receiver-acc")?.value.trim() || "";
+
+    const bdtAmount =
+        parseFloat(
+            document.getElementById("transfer-bdt-amount")?.value
+        ) || 0;
+
+    const method =
+        document.getElementById("transfer-payment-method")?.value ||
+        document.getElementById("transfer-method")?.value ||
+        "";
+
+    if (bdtAmount <= 0) {
+        alert("Please enter a valid amount.");
+        return;
+    }
+
+    if (!method) {
+        alert("Please select a payment method.");
+        return;
+    }
+
+    let bankName = "";
+    let bankAccountNumber = "";
+    let bankBranchName = "";
+    let bankSwiftCode = "";
+
+    if (method === "Bank") {
+
+        bankName =
+            document.getElementById("bank-name")?.value.trim() || "";
+
+        bankAccountNumber =
+            document.getElementById("bank-account-number")?.value.trim() ||
+            document.getElementById("bank-acc-number")?.value.trim() ||
+            "";
+
+        bankBranchName =
+            document.getElementById("bank-branch-name")?.value.trim() || "";
+
+        bankSwiftCode =
+            document.getElementById("bank-swift-code")?.value.trim() || "";
+
+        if (!bankAccountNumber) {
+            alert("Account Number is required for Bank Transfer.");
+            return;
+        }
+    }
+
+    const normalizedMethod =
+        takaGoNormalizeMethod(method);
+
+    let deduction;
+
+    try {
+        deduction = takaGoDeductUserBalance(
+            currentUser.id,
+            bdtAmount,
+            normalizedMethod
+        );
+    } catch (error) {
+        alert(error.message || "Insufficient balance.");
+        return;
+    }
+
+    let requests =
+        JSON.parse(
+            localStorage.getItem("takago_transfer_requests")
+        ) || [];
+
+    const newRequest = {
+
+        id: Date.now(),
+
+        userId: currentUser.id,
+
+        userName:
+            currentUser.name ||
+            currentUser.username ||
+            "",
+
+        receiverName: receiverName,
+
+        receiverAcc: receiverAcc,
+
+        bdtAmount: bdtAmount,
+
+        sarAmount: 0,
+
+        method: method,
+
+        walletMethod: normalizedMethod,
+
+        userMethodBalanceBefore:
+            deduction.methodBalanceBefore,
+
+        userMethodBalanceAfter:
+            deduction.methodBalanceAfter,
+
+        userTotalBalanceAfter:
+            deduction.totalBalanceAfter,
+
+        bankInfo:
+            method === "Bank"
+                ? {
+                    bankName: bankName,
+                    accountNumber: bankAccountNumber
+                }
+                : null,
+
+        bankName: bankName,
+
+        bankAccountNumber: bankAccountNumber,
+
+        bankBranchName: bankBranchName,
+
+        bankSwiftCode: bankSwiftCode,
+
+        status: "Pending",
+
+        pin: "",
+
+        timestamp: new Date().toLocaleString(),
+
+        isoTimestamp: new Date().toISOString()
+
+    };
+
+    requests.unshift(newRequest);
+
+    localStorage.setItem(
+        "takago_transfer_requests",
+        JSON.stringify(requests)
+    );
+
+    localStorage.setItem(
+        "takago_current_user",
+        JSON.stringify(deduction.user)
+    );
+
+    if (typeof renderUserTransferHistory === "function") {
+        renderUserTransferHistory();
+    }
+
+    if (typeof updateUserWalletInHeader === "function") {
+        updateUserWalletInHeader();
+    }
+
+    if (typeof updatePersonalAccountSummary === "function") {
+        updatePersonalAccountSummary();
+    }
+
+    if (typeof renderAdminTransactionInventory === "function") {
+        renderAdminTransactionInventory();
+    }
+
+    if (typeof renderAdminNetBalanceDashboard === "function") {
+        renderAdminNetBalanceDashboard();
+    }
+
+    alert(
+        "Transfer request submitted successfully!\n\n" +
+        "Method: " + normalizedMethod.toUpperCase() +
+        "\nDeducted: ৳ " + bdtAmount.toFixed(2) +
+        "\nMethod Balance Left: ৳ " +
+        deduction.methodBalanceAfter.toFixed(2) +
+        "\nTotal Balance Left: ৳ " +
+        deduction.totalBalanceAfter.toFixed(2)
+    );
+
+    const form = document.getElementById("transferRequestForm");
+    if (form) form.reset();
+
+    const bankFields =
+        document.getElementById("bank-details-container") ||
+        document.getElementById("bank-transfer-fields");
+
+    if (bankFields) {
+        bankFields.style.display = "none";
+    }
+
+    calculateWalletAmount();
+}
+
+
+// =========================================================
+// USER BALANCE CARD
+// =========================================================
+
+function renderUserBalanceCard() {
+
+    const currentUser = JSON.parse(
+        localStorage.getItem("takago_current_user")
+    );
+
+    const card = document.getElementById("user-method-balance-card");
+
+    if (!card || !currentUser) return;
+
+    const users =
+        JSON.parse(localStorage.getItem("takago_users")) || [];
+
+    const user = users.find(function(u) {
+        return String(u.id) === String(currentUser.id);
+    });
+
+    if (!user) return;
+
+    takaGoEnsureUserWallet(user);
+
+    const methods = [
+        ["bkash", "💚 bKash"],
+        ["nagad", "🟠 Nagad"],
+        ["bank", "🏦 Bank"],
+        ["recharge", "📱 Recharge"],
+        ["rocket", "🚀 Rocket"],
+        ["other", "💼 Other"]
+    ];
+
+    card.innerHTML =
+        methods.map(function(item) {
+            return `
+                <div class="stat-item">
+                    <h4>${item[1]}</h4>
+                    <p>
+                        ৳ ${parseFloat(
+                            user.walletBalances[item[0]] || 0
+                        ).toLocaleString("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        })}
+                    </p>
+                </div>
+            `;
+        }).join("") +
+        `
+            <div class="stat-item" style="grid-column:1/-1;">
+                <h4>💰 Total Balance</h4>
+                <p style="font-weight:800;color:#059669;">
+                    ৳ ${takaGoUserTotalBalance(user).toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })}
+                </p>
+            </div>
+        `;
+}
+
+function renderUserTransferHistory() {
+
+    const currentUser =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_current_user"
+            )
+        );
+
+
+    const tbody =
+        document.getElementById(
+            "user-transfer-history-body"
+        );
+
+
+    if (!tbody || !currentUser)
+        return;
+
+
+    const requests =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_transfer_requests"
+            )
+        ) || [];
+
+
+    const userRequests =
+        requests.filter(
+            r =>
+                String(r.userId) ===
+                String(currentUser.id)
+        );
+
+
+    tbody.innerHTML = "";
+
+
+    if (userRequests.length === 0) {
+
+        tbody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="7"
+                    style="
+                        text-align:center;
+                        color:#94a3b8;
+                        padding:15px;
+                    "
+                >
+                    No transfer requests found.
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+
+    }
+
+
+    /*
+     =========================================================
+     IMPORTANT:
+     Calculate wallet balance after every transaction
+     for old records that don't have walletBalanceAfter.
+     =========================================================
+    */
+
+    const users =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_users"
+            )
+        ) || [];
+
+
+    const user =
+        users.find(
+            u =>
+                String(u.id) ===
+                String(currentUser.id)
+        );
+
+
+    let runningBalance =
+        user
+            ? parseFloat(
+                user.bdtBalance || 0
+              )
+            : 0;
+
+
+    /*
+     Requests are newest first.
+
+     We go from oldest -> newest
+     to calculate balance after each transaction.
+    */
+
+    const chronological =
+        [...userRequests].reverse();
+
+
+    const balanceMap = {};
+
+
+    chronological.forEach(
+        function (req) {
+
+            const amount =
+                parseFloat(
+                    req.bdtAmount ||
+                    req.bdt ||
+                    0
+                );
+
+
+            let balanceAfter;
+
+
+            /*
+             New transaction already has
+             walletBalanceAfter.
+            */
+
+            if (
+                req.walletBalanceAfter !==
+                undefined &&
+                req.walletBalanceAfter !== null
+            ) {
+
+                balanceAfter =
+                    parseFloat(
+                        req.walletBalanceAfter
+                    );
+
+            } else {
+
+                /*
+                 For old transaction records,
+                 calculate it using current wallet
+                 and transaction history.
+                */
+
+                balanceAfter =
+                    runningBalance;
+
+            }
+
+
+            balanceMap[
+                String(req.id)
+            ] = balanceAfter;
+
+
+            /*
+             Move running balance backwards.
+            */
+
+            runningBalance =
+                balanceAfter + amount;
+
+        }
+    );
+
+
+    userRequests.forEach(
+        function (req) {
+
+            let statusBadge = "";
+
+
+            if (req.status === "Pending") {
+
+                statusBadge = `
+
+                    <span
+                        class="badge"
+                        style="
+                            background:#f59e0b;
+                            color:white;
+                            padding:3px 8px;
+                        "
+                    >
+                        Pending
+                    </span>
+
+                `;
+
+            }
+
+
+            else if (req.status === "Completed") {
+
+                statusBadge = `
+
+                    <span
+                        class="badge"
+                        style="
+                            background:#10b981;
+                            color:white;
+                            padding:3px 8px;
+                        "
+                    >
+                        Completed
+
+                        ${
+                            req.pin
+                                ? `&nbsp;|&nbsp;
+                                   <strong>
+                                   PIN: ${escapeHTML(req.pin)}
+                                   </strong>`
+                                : ""
+                        }
+
+                    </span>
+
+                `;
+
+            }
+
+
+            else if (req.status === "Cancelled") {
+
+                statusBadge = `
+
+                    <span
+                        class="badge"
+                        style="
+                            background:#ef4444;
+                            color:white;
+                            padding:3px 8px;
+                        "
+                    >
+                        Cancelled
+                    </span>
+
+                `;
+
+            }
+
+
+            let actionButton = "-";
+
+
+            if (req.status === "Pending") {
+
+                actionButton = `
+
+                    <button
+                        class="btn"
+                        style="
+                            background:#ef4444;
+                            color:white;
+                            padding:3px 8px;
+                            font-size:12px;
+                        "
+                        onclick="cancelUserRequest(${req.id})"
+                    >
+                        Cancel
+                    </button>
+
+                `;
+
+            }
+
+
+            const amount =
+                parseFloat(
+                    req.bdtAmount ||
+                    req.bdt ||
+                    0
+                );
+
+
+            let receiverDetails = `
+
+                <strong>
+                    ${escapeHTML(
+                        req.receiverName || ""
+                    )}
+                </strong>
+
+                <br>
+
+                <small>
+                    ${escapeHTML(
+                        req.receiverAcc || ""
+                    )}
+                </small>
+
+            `;
+
+
+            if (
+                req.method === "Bank" &&
+                req.bankAccountNumber
+            ) {
+
+                receiverDetails += `
+
+                    <br>
+
+                    <small
+                        style="color:#64748b;"
+                    >
+                        ${escapeHTML(
+                            req.bankName || ""
+                        )}
+
+                        ${
+                            req.bankBranchName
+                                ? " | " +
+                                  escapeHTML(
+                                      req.bankBranchName
+                                  )
+                                : ""
+                        }
+
+                    </small>
+
+                `;
+
+            }
+
+
+            /*
+             =====================================================
+             SINGLE PDF BUTTON
+             =====================================================
+            */
+
+            const pdfButton = `
+
+                <button
+                    class="btn"
+                    style="
+                        background:#7c3aed;
+                        color:white;
+                        padding:4px 9px;
+                        font-size:12px;
+                        font-weight:600;
+                        border:none;
+                        border-radius:5px;
+                        cursor:pointer;
+                    "
+                    onclick="downloadSingleUserTransactionPDF('${req.id}')"
+                    title="Download this transaction PDF"
+                >
+                    PDF
+                </button>
+
+            `;
+
+
+            const walletAfter =
+                balanceMap[
+                    String(req.id)
+                ];
+
+
+            const tr =
+                document.createElement("tr");
+
+
+            tr.innerHTML = `
+
+                <td>
+                    <small>
+                        ${escapeHTML(
+                            req.timestamp || ""
+                        )}
+                    </small>
+                </td>
+
+
+                <td>
+                    ${receiverDetails}
+                </td>
+
+
+                <td>
+                    <strong>
+                        ৳ ${amount.toFixed(2)}
+                    </strong>
+                </td>
+
+
+                <td>
+                    ${escapeHTML(
+                        req.method || ""
+                    )}
+                </td>
+
+
+                <td>
+                    ${statusBadge}
+                </td>
+
+
+                <td>
+                    ${pdfButton}
+                </td>
+
+
+                <td>
+                    ${actionButton}
+                </td>
+
+            `;
+
+
+            tbody.appendChild(tr);
+
+        }
+    );
+
+}
+
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHTML(value) {
+
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+
+/* =========================================================
+   CANCEL USER REQUEST
+========================================================= */
+
+function cancelUserRequest(reqId) {
+
+    if (!confirm(
+        "Are you sure you want to cancel this request? Your balance will be refunded to the same account used for the transfer."
+    )) {
+        return;
+    }
+
+    let requests =
+        JSON.parse(localStorage.getItem("takago_transfer_requests")) || [];
+
+    const requestIndex =
+        requests.findIndex(function(r) {
+            return String(r.id) === String(reqId);
+        });
+
+    if (
+        requestIndex === -1 ||
+        requests[requestIndex].status !== "Pending"
+    ) {
+        return;
+    }
+
+    const request = requests[requestIndex];
+    const refundAmount =
+        parseFloat(request.bdtAmount || request.bdt || 0);
+
+    const refundMethod =
+        request.walletMethod ||
+        takaGoNormalizeMethod(request.method);
+
+    try {
+        if (request.userId) {
+            takaGoRefundUserBalance(
+                request.userId,
+                refundAmount,
+                refundMethod
+            );
+        }
+
+        const users =
+            JSON.parse(localStorage.getItem("takago_users")) || [];
+
+        const user =
+            users.find(function(u) {
+                return String(u.id) === String(request.userId);
+            });
+
+        if (user) {
+            takaGoEnsureUserWallet(user);
+
+            request.userMethodBalanceAfter =
+                parseFloat(user.walletBalances[refundMethod] || 0);
+
+            request.userTotalBalanceAfter =
+                takaGoUserTotalBalance(user);
+
+            request.refundedMethod = refundMethod;
+        }
+
+        request.status = "Cancelled";
+        request.cancelledAt = new Date().toISOString();
+
+        localStorage.setItem(
+            "takago_transfer_requests",
+            JSON.stringify(requests)
+        );
+
+        updateUserWalletHeader();
+        if (typeof renderUserTransferHistory === "function") {
+            renderUserTransferHistory();
+        }
+        if (typeof renderUserBalanceCard === "function") {
+            renderUserBalanceCard();
+        }
+
+        alert(
+            "Request cancelled successfully!\n\n" +
+            "Refunded: ৳ " + refundAmount.toFixed(2) +
+            "\nAccount: " + refundMethod.toUpperCase()
+        );
+
+    } catch (error) {
+        alert(error.message || "Refund failed.");
+    }
+}
+
+
+/* =========================================================
+   SINGLE TRANSACTION PDF
+========================================================= */
+
+function downloadSingleUserTransactionPDF(reqId) {
+
+    if (
+        !window.jspdf ||
+        !window.jspdf.jsPDF
+    ) {
+
+        alert(
+            "PDF library is not loaded. Please refresh the page."
+        );
+
+        return;
+
+    }
+
+
+    const { jsPDF } =
+        window.jspdf;
+
+
+    const currentUser =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_current_user"
+            )
+        );
+
+
+    if (!currentUser) {
+
+        alert(
+            "Please login first!"
+        );
+
+        return;
+
+    }
+
+
+    const requests =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_transfer_requests"
+            )
+        ) || [];
+
+
+    const request =
+        requests.find(
+            r =>
+                String(r.id) ===
+                String(reqId)
+        );
+
+
+    if (!request) {
+
+        alert(
+            "Transaction not found!"
+        );
+
+        return;
+
+    }
+
+
+    if (
+        String(request.userId) !==
+        String(currentUser.id)
+    ) {
+
+        alert(
+            "Access denied!"
+        );
+
+        return;
+
+    }
+
+
+    /*
+     =========================================================
+     GET WALLET BALANCE AFTER THIS TRANSACTION
+     =========================================================
+    */
+
+    let walletAfter;
+
+
+    if (
+        request.walletBalanceAfter !==
+        undefined &&
+        request.walletBalanceAfter !== null
+    ) {
+
+        walletAfter =
+            parseFloat(
+                request.walletBalanceAfter
+            );
+
+    } else {
+
+        /*
+         Old transaction fallback calculation
+        */
+
+        const users =
+            JSON.parse(
+                localStorage.getItem(
+                    "takago_users"
+                )
+            ) || [];
+
+
+        const user =
+            users.find(
+                u =>
+                    String(u.id) ===
+                    String(currentUser.id)
+            );
+
+
+        let runningBalance =
+            user
+                ? parseFloat(
+                    user.bdtBalance || 0
+                  )
+                : 0;
+
+
+        const userRequests =
+            requests
+                .filter(
+                    r =>
+                        String(r.userId) ===
+                        String(currentUser.id)
+                )
+                .sort(
+                    (a, b) =>
+                        Number(a.id) -
+                        Number(b.id)
+                );
+
+
+        for (
+            let i = 0;
+            i < userRequests.length;
+            i++
+        ) {
+
+            const r =
+                userRequests[i];
+
+
+            const amount =
+                parseFloat(
+                    r.bdtAmount ||
+                    r.bdt ||
+                    0
+                );
+
+
+            /*
+             Reverse calculation
+            */
+
+            if (
+                String(r.id) ===
+                String(request.id)
+            ) {
+
+                walletAfter =
+                    runningBalance;
+
+                break;
+
+            }
+
+
+            if (
+                r.status === "Cancelled"
+            ) {
+
+                runningBalance -=
+                    amount;
+
+            } else {
+
+                runningBalance +=
+                    amount;
+
+            }
+
+        }
+
+
+        if (
+            walletAfter ===
+            undefined
+        ) {
+
+            walletAfter =
+                runningBalance;
+
+        }
+
+    }
+
+
+    const doc =
+        new jsPDF();
+
+
+    /*
+     =========================================================
+     PDF HEADER
+     =========================================================
+    */
+
+    doc.setFontSize(20);
+
+    doc.setFont(
+        "helvetica",
+        "bold"
+    );
+
+
+    doc.text(
+        "TAKA GO",
+        14,
+        20
+    );
+
+
+    doc.setFontSize(11);
+
+    doc.setFont(
+        "helvetica",
+        "normal"
+    );
+
+
+    doc.text(
+        "Transaction Receipt",
+        14,
+        27
+    );
+
+
+    /*
+     =========================================================
+     TRANSACTION ID
+     =========================================================
+    */
+
+    doc.setFontSize(9);
+
+    doc.text(
+        `Transaction ID: ${request.id}`,
+        14,
+        36
+    );
+
+
+    doc.text(
+        `Generated: ${new Date().toLocaleString()}`,
+        14,
+        42
+    );
+
+
+    /*
+     =========================================================
+     USER INFORMATION
+     =========================================================
+    */
+
+    const userName =
+        currentUser.name ||
+        currentUser.username ||
+        "N/A";
+
+
+    doc.autoTable({
+
+        startY: 50,
+
+        theme: "grid",
+
+        head: [
+            [
+                "Customer Information",
+                "Details"
+            ]
+        ],
+
+        body: [
+
+            [
+                "User Name",
+                userName
+            ],
+
+            [
+                "Username",
+                currentUser.username ||
+                "N/A"
+            ],
+
+            [
+                "Transaction Date",
+                request.timestamp ||
+                "N/A"
+            ]
+
+        ],
+
+        styles: {
+            fontSize: 9,
+            cellPadding: 4
+        },
+
+        headStyles: {
+            fillColor: [
+                37,
+                99,
+                235
+            ]
+        }
+
+    });
+
+
+    /*
+     =========================================================
+     RECEIVER DETAILS
+     =========================================================
+    */
+
+    let receiverDetails =
+        `${request.receiverName || "N/A"}
+${request.receiverAcc || "N/A"}`;
+
+
+    if (
+        request.method === "Bank" &&
+        request.bankAccountNumber
+    ) {
+
+        receiverDetails +=
+            `
+
+Bank: ${request.bankName || "N/A"}
+A/C: ${request.bankAccountNumber || "N/A"}
+Branch: ${request.bankBranchName || "N/A"}
+SWIFT: ${request.bankSwiftCode || "N/A"}`;
+
+    }
+
+
+    let statusText =
+        request.status ||
+        "N/A";
+
+
+    if (
+        request.status === "Completed" &&
+        request.pin
+    ) {
+
+        statusText +=
+            `\nPIN / Reference: ${request.pin}`;
+
+    }
+
+
+    /*
+     =========================================================
+     TRANSACTION DETAILS
+     =========================================================
+    */
+
+    const amount =
+        parseFloat(
+            request.bdtAmount ||
+            request.bdt ||
+            0
+        );
+
+
+    doc.autoTable({
+
+        startY:
+            doc.lastAutoTable.finalY +
+            10,
+
+        theme: "grid",
+
+        head: [
+
+            [
+                "Transaction Details",
+                "Information"
+            ]
+
+        ],
+
+        body: [
+
+            [
+                "Receiver",
+                receiverDetails
+            ],
+
+            [
+                "Amount",
+                `BDT ${amount.toFixed(2)}`
+            ],
+
+            [
+                "Payment Method",
+                request.method ||
+                "N/A"
+            ],
+
+            [
+                "Status",
+                statusText
+            ],
+
+            [
+                "Wallet Balance After Transaction",
+                `BDT ${walletAfter.toFixed(2)}`
+            ]
+
+        ],
+
+        styles: {
+            fontSize: 9,
+            cellPadding: 4
+        },
+
+        headStyles: {
+            fillColor: [
+                16,
+                185,
+                129
+            ]
+        },
+
+        columnStyles: {
+
+            0: {
+                fontStyle: "bold"
+            },
+
+            1: {
+                cellWidth: 110
+            }
+
+        }
+
+    });
+
+
+    /*
+     =========================================================
+     FOOTER
+     =========================================================
+    */
+
+    let finalY =
+        doc.lastAutoTable.finalY +
+        15;
+
+
+    doc.setFontSize(9);
+
+    doc.setFont(
+        "helvetica",
+        "normal"
+    );
+
+
+    doc.text(
+        "This is a system generated transaction receipt.",
+        14,
+        finalY
+    );
+
+
+    doc.text(
+        "TAKA GO - Customer Wallet & Transfer System",
+        14,
+        finalY + 6
+    );
+
+
+    /*
+     =========================================================
+     SAVE
+     =========================================================
+    */
+
+    const safeId =
+        String(request.id)
+            .replace(
+                /[^a-zA-Z0-9_-]/g,
+                ""
+            );
+
+
+    doc.save(
+        `TAKA_GO_Transaction_${safeId}.pdf`
+    );
+
+}
+
+
+
+/* =========================================================
+   DOWNLOAD ALL USER TRANSACTIONS PDF
+========================================================= */
+
+function downloadUserTransactionPDF() {
+
+    if (
+        !window.jspdf ||
+        !window.jspdf.jsPDF
+    ) {
+
+        alert(
+            "PDF library is not loaded. Please refresh the page."
+        );
+
+        return;
+
+    }
+
+
+    const { jsPDF } =
+        window.jspdf;
+
+
+    const doc =
+        new jsPDF();
+
+
+    const currentUser =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_current_user"
+            )
+        );
+
+
+    if (!currentUser) {
+
+        alert(
+            "Please login first!"
+        );
+
+        return;
+
+    }
+
+
+    const requests =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_transfer_requests"
+            )
+        ) || [];
+
+
+    let userRequests =
+        requests.filter(
+            r =>
+                String(r.userId) ===
+                String(currentUser.id)
+        );
+
+
+    const filterDateInput =
+        document.getElementById(
+            "user-pdf-filter-date"
+        ).value;
+
+
+    if (filterDateInput) {
+
+        userRequests =
+            userRequests.filter(
+                r => {
+
+                    if (!r.timestamp)
+                        return false;
+
+
+                    return (
+                        r.timestamp.includes(
+                            filterDateInput
+                        ) ||
+                        (
+                            !isNaN(
+                                new Date(
+                                    r.timestamp
+                                ).getTime()
+                            ) &&
+                            new Date(
+                                r.timestamp
+                            )
+                            .toISOString()
+                            .split("T")[0] ===
+                            filterDateInput
+                        )
+                    );
+
+                }
+            );
+
+    }
+
+
+    if (userRequests.length === 0) {
+
+        alert(
+            "No transaction records found for the selected criteria/date."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     =========================================================
+     CURRENT WALLET
+     =========================================================
+    */
+
+    const users =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_users"
+            )
+        ) || [];
+
+
+    const user =
+        users.find(
+            u =>
+                String(u.id) ===
+                String(currentUser.id)
+        );
+
+
+    const currentWallet =
+        user
+            ? parseFloat(
+                user.bdtBalance || 0
+              )
+            : parseFloat(
+                currentUser.bdtBalance || 0
+              );
+
+
+    /*
+     =========================================================
+     HEADER
+     =========================================================
+    */
+
+    doc.setFontSize(18);
+
+    doc.setFont(
+        "helvetica",
+        "bold"
+    );
+
+
+    doc.text(
+        "TAKA GO - My Transaction Report",
+        14,
+        20
+    );
+
+
+    doc.setFontSize(10);
+
+    doc.setFont(
+        "helvetica",
+        "normal"
+    );
+
+
+    doc.text(
+        `User Name: ${
+            currentUser.name ||
+            currentUser.username ||
+            "N/A"
+        }`,
+        14,
+        28
+    );
+
+
+    doc.text(
+        `Generated Date: ${new Date().toLocaleString()}`,
+        14,
+        34
+    );
+
+
+    doc.text(
+        `Current Wallet Balance: BDT ${currentWallet.toFixed(2)}`,
+        14,
+        40
+    );
+
+
+    if (filterDateInput) {
+
+        doc.text(
+            `Filtered Date: ${filterDateInput}`,
+            14,
+            46
+        );
+
+    }
+
+
+    /*
+     =========================================================
+     TABLE
+    =========================================================
+    */
+
+    const tableData = [];
+
+
+    userRequests.forEach(
+        req => {
+
+            let details =
+                `${req.receiverName || ""}
+(${req.receiverAcc || ""})`;
+
+
+            if (
+                req.method === "Bank" &&
+                req.bankAccountNumber
+            ) {
+
+                details +=
+                    `\nBank: ${
+                        req.bankName ||
+                        "N/A"
+                    }`;
+
+                details +=
+                    `\nA/C: ${
+                        req.bankAccountNumber
+                    }`;
+
+                details +=
+                    `\nBranch: ${
+                        req.bankBranchName ||
+                        "N/A"
+                    }`;
+
+            }
+
+
+            const amount =
+                parseFloat(
+                    req.bdtAmount ||
+                    req.bdt ||
+                    0
+                ).toFixed(2);
+
+
+            let statusText =
+                req.status ||
+                "";
+
+
+            if (
+                req.status === "Completed" &&
+                req.pin
+            ) {
+
+                statusText +=
+                    `\nPIN: ${req.pin}`;
+
+            }
+
+
+            /*
+             Wallet after transaction
+            */
+
+            let walletAfter =
+                req.walletBalanceAfter;
+
+
+            if (
+                walletAfter ===
+                undefined ||
+                walletAfter === null
+            ) {
+
+                walletAfter =
+                    "N/A";
+
+            } else {
+
+                walletAfter =
+                    `BDT ${parseFloat(
+                        walletAfter
+                    ).toFixed(2)}`;
+
+            }
+
+
+            tableData.push([
+
+                req.timestamp ||
+                "",
+
+                details,
+
+                `BDT ${amount}`,
+
+                req.method ||
+                "",
+
+                statusText,
+
+                walletAfter
+
+            ]);
+
+        }
+    );
+
+
+    doc.autoTable({
+
+        startY:
+            filterDateInput
+                ? 52
+                : 46,
+
+        head: [
+
+            [
+                "Date",
+                "Receiver & Details",
+                "Amount",
+                "Method",
+                "Status",
+                "Wallet After"
+            ]
+
+        ],
+
+        body:
+            tableData,
+
+        theme:
+            "grid",
+
+        headStyles: {
+
+            fillColor: [
+                37,
+                99,
+                235
+            ]
+
+        },
+
+        styles: {
+
+            fontSize: 7.5,
+
+            cellPadding: 3
+
+        }
+
+    });
+
+
+    /*
+     =========================================================
+     SAVE
+     =========================================================
+    */
+
+    doc.save(
+        `TAKA_GO_My_Transaction_Report_${
+            new Date()
+                .toISOString()
+                .split("T")[0]
+        }.pdf`
+    );
+
+}
+
+</script>
+
+</body>
+</html>

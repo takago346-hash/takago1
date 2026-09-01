@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAKA GO - Create User & Role Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo">
+            <h2>TAKA<span class="go-tag">GO</span> Super Admin</h2>
+        </div>
+        <nav class="nav-menu">
+            <a href="admin.html">← Back to Admin Panel</a>
+            <a href="#" onclick="handleLogout()" style="color: #ef4444; font-weight: bold; margin-left: 15px;">Logout</a>
+        </nav>
+    </header>
+
+    <div class="main-container" style="max-width: 500px; margin: 40px auto;">
+        <section class="card-box">
+            <h2 class="section-title">Create New Account</h2>
+            
+            <form id="createUserForm" onsubmit="createNewUser(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="new-username" required placeholder="e.g. rahim123">
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="new-password" required placeholder="Create strong password">
+                </div>
+
+                <div class="form-group">
+                    <label>Select User Role</label>
+                    <select id="new-role" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-weight: bold;">
+                        <option value="user">User (Remittance Request & Rates Only)</option>
+                        <option value="admin">Admin (Rates Update & Inventory Management)</option>
+                        <option value="superadmin">Super Admin (Full System & User Creation Control)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" style="margin-top: 15px;">Create Account</button>
+            </form>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

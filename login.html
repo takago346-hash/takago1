@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TAKA GO - Professional Login</title>
+
+    <!-- Google Font -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Authentication -->
+    <script src="auth.js"></script>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        body {
+
+            font-family: 'Inter', sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0f172a 0%,
+                    #1e293b 100%
+                );
+
+            min-height: 100vh;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            padding: 20px;
+        }
+
+
+        .login-card {
+
+            background: #ffffff;
+
+            width: 100%;
+
+            max-width: 400px;
+
+            padding: 40px 30px;
+
+            border-radius: 16px;
+
+            box-shadow:
+                0 20px 25px -5px rgba(0, 0, 0, 0.3),
+                0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+
+        .brand-header {
+
+            text-align: center;
+
+            margin-bottom: 30px;
+        }
+
+
+        .brand-header h2 {
+
+            font-size: 28px;
+
+            font-weight: 800;
+
+            color: #0f172a;
+
+            letter-spacing: -0.5px;
+        }
+
+
+        .brand-header .go-tag {
+
+            color: #d97706;
+        }
+
+
+        .brand-header p {
+
+            color: #64748b;
+
+            font-size: 14px;
+
+            margin-top: 6px;
+        }
+
+
+        .form-group {
+
+            margin-bottom: 20px;
+        }
+
+
+        .form-group label {
+
+            display: block;
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            color: #334155;
+
+            margin-bottom: 8px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.5px;
+        }
+
+
+        .form-group input {
+
+            width: 100%;
+
+            padding: 12px 16px;
+
+            border: 2px solid #e2e8f0;
+
+            border-radius: 8px;
+
+            font-size: 15px;
+
+            color: #0f172a;
+
+            outline: none;
+
+            transition: all 0.2s ease;
+        }
+
+
+        .form-group input:focus {
+
+            border-color: #2563eb;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(37, 99, 235, 0.15);
+        }
+
+
+        .btn-login {
+
+            width: 100%;
+
+            padding: 14px;
+
+            background: #2563eb;
+
+            color: #ffffff;
+
+            border: none;
+
+            border-radius: 8px;
+
+            font-size: 16px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            transition:
+                background 0.2s ease,
+                transform 0.1s ease;
+
+            margin-top: 10px;
+        }
+
+
+        .btn-login:hover {
+
+            background: #1d4ed8;
+        }
+
+
+        .btn-login:active {
+
+            transform: scale(0.98);
+        }
+
+
+        .demo-credentials {
+
+            margin-top: 25px;
+
+            padding: 15px;
+
+            background: #f8fafc;
+
+            border: 1px dashed #cbd5e1;
+
+            border-radius: 8px;
+
+            font-size: 12px;
+
+            color: #475569;
+        }
+
+
+        .demo-credentials strong {
+
+            display: block;
+
+            color: #1e293b;
+
+            margin-bottom: 6px;
+        }
+
+
+        .demo-credentials ul {
+
+            list-style: none;
+
+            padding-left: 0;
+        }
+
+
+        .demo-credentials li {
+
+            margin-bottom: 4px;
+        }
+
+
+        /* Mobile */
+
+        @media (max-width: 480px) {
+
+            body {
+                padding: 15px;
+            }
+
+            .login-card {
+
+                padding: 30px 22px;
+
+                border-radius: 14px;
+            }
+
+            .brand-header h2 {
+
+                font-size: 25px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <div class="login-card">
+
+
+        <!-- BRAND -->
+
+        <div class="brand-header">
+
+            <h2>
+                TAKA<span class="go-tag">GO</span> System
+            </h2>
+
+            <p>
+                Welcome back! Please login to your account.
+            </p>
+
+        </div>
+
+
+
+        <!-- LOGIN FORM -->
+
+        <form
+            id="login-form"
+            onsubmit="handleLogin(event)"
+        >
+
+
+            <!-- USERNAME -->
+
+            <div class="form-group">
+
+                <label for="login-username">
+                    Username
+                </label>
+
+                <input
+                    type="text"
+                    id="login-username"
+                    name="username"
+                    placeholder="Enter username"
+                    required
+                    autocomplete="username"
+                >
+
+            </div>
+
+
+
+            <!-- PASSWORD -->
+
+            <div class="form-group">
+
+                <label for="login-password">
+                    Password
+                </label>
+
+                <input
+                    type="password"
+                    id="login-password"
+                    name="password"
+                    placeholder="Enter password"
+                    required
+                    autocomplete="current-password"
+                >
+
+            </div>
+
+
+
+            <!-- LOGIN BUTTON -->
+
+            <button
+                type="submit"
+                class="btn-login"
+                id="login-submit-btn"
+            >
+                Sign In
+            </button>
+
+
+        </form>
+
+
+
+        <!-- DEMO LOGIN -->
+
+        <div class="demo-credentials">
+
+            <strong>
+                🔑 Demo Account Credentials:
+            </strong>
+
+            <ul>
+
+                <li>
+                    • <b>Super Admin:</b>
+                    superadmin | pass: 123
+                </li>
+
+                <li>
+                    • <b>Main Admin:</b>
+                    admin | pass: 123
+                </li>
+
+                <li>
+                    • <b>General User:</b>
+                    user | pass: 123
+                </li>
+
+            </ul>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!--
+        Extra safety:
+        auth.js load না হলে console-এ error দেখাবে।
+    -->
+
+    <script>
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                const form =
+                    document.getElementById("login-form");
+
+                if (!form) {
+                    console.error(
+                        "Login form not found!"
+                    );
+                }
+
+                if (
+                    typeof handleLogin !==
+                    "function"
+                ) {
+
+                    console.error(
+                        "handleLogin() not found! Check auth.js."
+                    );
+
+                }
+
+            }
+        );
+
+    </script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>TAKA GO - Admin Dashboard</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="auth.js"></script>
+    <script src="script.js"></script>
+
+    <!-- jsPDF -->
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+    </script>
+
+    <!-- AutoTable -->
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js">
+    </script>
+
+    <script>
+        checkPageAccess(['admin', 'superadmin']);
+    </script>
+
+    <style>
+
+        .stat-card-grid {
+
+            display:grid;
+
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(280px,1fr)
+                );
+
+            gap:20px;
+
+            margin-top:20px;
+        }
+
+        .stat-card {
+
+            background:#ffffff;
+
+            border:1px solid #e2e8f0;
+
+            border-radius:10px;
+
+            padding:20px;
+
+            box-shadow:
+                0 1px 3px
+                rgba(0,0,0,0.05);
+        }
+
+        .stat-card h3 {
+
+            margin:
+                0 0 10px 0;
+
+            font-size:14px;
+
+            color:#64748b;
+
+            text-transform:uppercase;
+        }
+
+        .stat-card .amount {
+
+            font-size:24px;
+
+            font-weight:700;
+
+            color:#0f172a;
+
+            margin:0;
+        }
+
+        .stat-card p {
+
+            margin:
+                5px 0 0 0;
+
+            font-size:12px;
+
+            color:#64748b;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="logo">
+
+        <h2>
+            TAKA<span class="go-tag">GO</span>
+            Admin
+        </h2>
+
+    </div>
+
+    <nav class="nav-menu">
+
+        <a href="index.html">
+            User View
+        </a>
+
+        <a
+            href="admin.html"
+            class="active"
+        >
+            Admin Dashboard
+        </a>
+        <a href="admin-account.html">
+    Admin Account
+</a>
+
+        <a href="balance-manage.html">
+            Balance Portal
+        </a>
+
+        <span id="nav-role-links"></span>
+
+    </nav>
+
+    <div
+        class="nav-actions"
+        style="
+            display:flex;
+            align-items:center;
+            gap:10px;
+        "
+    >
+
+        <span
+            id="header-balance-display"
+            style="
+                font-size:13px;
+                font-weight:600;
+                color:#0f172a;
+            "
+        >
+            Balance: ৳ 0.00
+        </span>
+
+        <span
+            id="user-badge"
+            style="
+                font-size:13px;
+                font-weight:600;
+                padding:4px 10px;
+                border-radius:20px;
+                background:#e5e7eb;
+                color:#374151;
+            "
+        >
+        </span>
+
+        <button
+            class="btn"
+            style="
+                background:#ef4444;
+                color:white;
+            "
+            onclick="handleLogout()"
+        >
+            Logout
+        </button>
+
+    </div>
+
+</header>
+
+
+<div
+    class="main-container"
+    style="
+        max-width:1200px;
+        margin:30px auto;
+        padding:0 20px;
+    "
+>
+
+
+<!-- =========================================================
+     FINANCIAL DASHBOARD
+========================================================= -->
+
+<section style="margin-top:20px;">
+
+    <div
+        style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        "
+    >
+
+        <h3
+            style="
+                margin:0;
+                color:#0f172a;
+            "
+        >
+            Financial Net Balance Dashboard
+        </h3>
+
+        <button
+            id="clear-data-btn"
+            class="btn"
+            style="
+                background:#dc2626;
+                color:white;
+                padding:5px 10px;
+                font-size:12px;
+                display:none;
+            "
+            onclick="clearAllTransactions()"
+        >
+            Clear All Data
+        </button>
+
+    </div>
+
+
+    <div class="stat-card-grid">
+
+        <div class="stat-card">
+
+            <h3>
+                Receivable (Paid Deposits)
+            </h3>
+
+            <p
+                class="amount"
+                id="stat-receivable"
+                style="color:#059669;"
+            >
+                ৳ 0.00
+            </p>
+
+            <p>
+                Total paid add-amount by customers
+            </p>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <h3>
+                Total Due
+            </h3>
+
+            <p
+                class="amount"
+                id="stat-total-due"
+                style="color:#dc2626;"
+            >
+                ৳ 0.00
+            </p>
+
+            <p>
+                Total remaining due from customers
+            </p>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <h3>
+                Net Balance (Total)
+            </h3>
+
+            <p
+                class="amount"
+                id="stat-net-balance"
+                style="color:#2563eb;"
+            >
+                ৳ 0.00
+            </p>
+
+            <p>
+                (Receivable + Due) minus user transactions
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     TRANSACTION INVENTORY
+========================================================= -->
+
+<section
+    class="card-box"
+    style="margin-top:30px;"
+>
+
+    <div
+        style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:15px;
+            flex-wrap:wrap;
+            gap:10px;
+        "
+    >
+
+        <h3 style="margin:0;">
+            Customer Transaction Inventory
+        </h3>
+
+
+        <div
+            style="
+                display:flex;
+                gap:10px;
+                align-items:center;
+            "
+        >
+
+            <input
+                type="date"
+                id="pdf-filter-date"
+                style="
+                    padding:6px;
+                    border-radius:5px;
+                    border:1px solid #ccc;
+                    font-size:12px;
+                "
+            >
+
+
+            <!--
+                IMPORTANT:
+                This is now ADMIN REPORT button.
+            -->
+
+            <button
+                onclick="downloadAdminPDFReport()"
+                class="btn"
+                style="
+                    background:#2563eb;
+                    color:#fff;
+                    padding:6px 12px;
+                    border:none;
+                    border-radius:5px;
+                    cursor:pointer;
+                    font-size:12px;
+                    font-weight:bold;
+                "
+            >
+                Download PDF Report
+            </button>
+
+
+            <span
+                id="admin-record-count"
+                class="badge"
+                style="
+                    background:#e2e8f0;
+                    color:#334155;
+                    padding:4px 10px;
+                    border-radius:12px;
+                    font-size:12px;
+                "
+            >
+                0 Records
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div class="table-responsive">
+
+        <table class="data-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Customer
+                    </th>
+
+                    <th>
+                        Receiver & Details
+                    </th>
+
+                    <th>
+                        Amount
+                    </th>
+
+                    <th>
+                        Method
+                    </th>
+
+                    <th>
+                        Status & Pin
+                    </th>
+
+                    <th>
+                        Action
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody
+                id="admin-transaction-inventory-body"
+            >
+
+                <tr>
+
+                    <td
+                        colspan="6"
+                        style="
+                            text-align:center;
+                            color:#94a3b8;
+                            padding:20px;
+                        "
+                    >
+                        No transaction records found
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     CUSTOMER BALANCE
+========================================================= -->
+
+<section
+    class="card-box"
+    id="admin-balance-dashboard-section"
+    style="margin-top:30px;"
+>
+
+    <h3>
+        Customer Balances & Due Statement Dashboard
+    </h3>
+
+
+    <div
+        class="table-responsive"
+        style="margin-top:15px;"
+    >
+
+        <table class="data-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        User Name
+                    </th>
+
+                    <th>
+                        Role
+                    </th>
+
+                    <th>
+                        Wallet Balance (BDT)
+                    </th>
+
+                    <th>
+                        Total Due
+                    </th>
+
+                    <th>
+                        Paid Amount
+                    </th>
+
+                    <th>
+                        Remaining Due
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody
+                id="admin-balance-table-body"
+            >
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   ADMIN PAGE INITIALIZATION
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        applyAdminDashboardRoleUI();
+
+        renderFinancialDashboard();
+
+        renderAdminBalanceTable();
+
+        renderAdminTransactionInventory();
+
+    }
+);
+
+
+/* =========================================================
+   ROLE UI
+========================================================= */
+
+function applyAdminDashboardRoleUI() {
+
+    const currentUser =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_current_user"
+            )
+        );
+
+    if (!currentUser) return;
+
+    const role =
+        (
+            currentUser.role || ""
+        )
+        .toLowerCase()
+        .trim();
+
+
+    if (role === "admin") {
+
+        const section =
+            document.getElementById(
+                "admin-balance-dashboard-section"
+            );
+
+        if (section) {
+
+            section.style.setProperty(
+                "display",
+                "none",
+                "important"
+            );
+        }
+    }
+
+
+    if (role === "superadmin") {
+
+        const clearBtn =
+            document.getElementById(
+                "clear-data-btn"
+            );
+
+        if (clearBtn) {
+
+            clearBtn.style.setProperty(
+                "display",
+                "inline-block",
+                "important"
+            );
+        }
+    }
+}
+
+
+/* =========================================================
+   FINANCIAL DASHBOARD
+========================================================= */
+
+function renderFinancialDashboard() {
+
+    const balanceRequests =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_balance_requests"
+            )
+        ) || [];
+
+    const users =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_users"
+            )
+        ) || [];
+
+    const requests =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_transfer_requests"
+            )
+        ) || [];
+
+
+    let receivable = 0;
+
+    let dueAdded = 0;
+
+    let duePaid = 0;
+
+
+    balanceRequests.forEach(
+        function (req) {
+
+            const amount =
+                parseFloat(
+                    req.amount || 0
+                );
+
+            const type =
+                String(
+                    req.type ||
+                    req.paymentType ||
+                    ""
+                )
+                .toLowerCase()
+                .trim();
+
+            const status =
+                String(
+                    req.status || ""
+                )
+                .toLowerCase()
+                .trim();
+
+
+            if (
+                status === "approved" ||
+                status === "completed" ||
+                status === "paid"
+            ) {
+
+                if (
+                    type === "paid" ||
+                    type === "deposit" ||
+                    type === "add"
+                ) {
+
+                    receivable += amount;
+                }
+
+
+                if (type === "due") {
+
+                    dueAdded += amount;
+                }
+            }
+        }
+    );
+
+
+    users.forEach(
+        function (user) {
+
+            if (!user.dues) return;
+
+            const paid =
+                parseFloat(
+                    user.dues.paid || 0
+                );
+
+            if (paid > 0) {
+
+                duePaid += paid;
+            }
+        }
+    );
+
+
+    receivable += duePaid;
+
+
+    let totalDue =
+        dueAdded - duePaid;
+
+
+    if (totalDue < 0) {
+
+        totalDue = 0;
+    }
+
+
+    let transferExpenses = 0;
+
+
+    requests.forEach(
+        function (req) {
+
+            const status =
+                String(
+                    req.status || ""
+                )
+                .toLowerCase()
+                .trim();
+
+
+            if (
+                status === "pending" ||
+                status === "completed"
+            ) {
+
+                transferExpenses +=
+                    parseFloat(
+                        req.bdtAmount ||
+                        req.bdt ||
+                        0
+                    );
+            }
+        }
+    );
+
+
+    let netBalance =
+        receivable +
+        totalDue -
+        transferExpenses;
+
+
+    if (netBalance < 0) {
+
+        netBalance = 0;
+    }
+
+
+    const receivableEl =
+        document.getElementById(
+            "stat-receivable"
+        );
+
+    const dueEl =
+        document.getElementById(
+            "stat-total-due"
+        );
+
+    const netEl =
+        document.getElementById(
+            "stat-net-balance"
+        );
+
+
+    if (receivableEl) {
+
+        receivableEl.innerText =
+            `৳ ${receivable.toLocaleString(
+                "en-IN",
+                {
+                    minimumFractionDigits:2,
+                    maximumFractionDigits:2
+                }
+            )}`;
+    }
+
+
+    if (dueEl) {
+
+        dueEl.innerText =
+            `৳ ${totalDue.toLocaleString(
+                "en-IN",
+                {
+                    minimumFractionDigits:2,
+                    maximumFractionDigits:2
+                }
+            )}`;
+    }
+
+
+    if (netEl) {
+
+        netEl.innerText =
+            `৳ ${netBalance.toLocaleString(
+                "en-IN",
+                {
+                    minimumFractionDigits:2,
+                    maximumFractionDigits:2
+                }
+            )}`;
+    }
+}
+
+
+/* =========================================================
+   CLEAR DATA
+========================================================= */
+
+function clearAllTransactions() {
+
+    const currentUser =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_current_user"
+            )
+        );
+
+    if (
+        !currentUser ||
+        String(
+            currentUser.role || ""
+        )
+        .toLowerCase()
+        .trim() !== "superadmin"
+    ) {
+
+        alert(
+            "Access Denied! Only Super Admin can clear all data."
+        );
+
+        return;
+    }
+
+
+    if (
+        !confirm(
+            "Are you sure you want to clear all transfer records, balance requests, and reset all financial data?"
+        )
+    ) {
+
+        return;
+    }
+
+
+    localStorage.removeItem(
+        "takago_transfer_requests"
+    );
+
+    localStorage.removeItem(
+        "takago_requests"
+    );
+
+    localStorage.removeItem(
+        "takago_balance_requests"
+    );
+
+
+    let users =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_users"
+            )
+        ) || [];
+
+
+    users.forEach(
+        function (user) {
+
+            user.bdtBalance = 0;
+
+            if (user.dues) {
+
+                user.dues.amount = 0;
+
+                user.dues.paid = 0;
+            }
+        }
+    );
+
+
+    localStorage.setItem(
+        "takago_users",
+        JSON.stringify(users)
+    );
+
+
+    renderFinancialDashboard();
+
+    renderAdminBalanceTable();
+
+    renderAdminTransactionInventory();
+
+
+    alert(
+        "All system data and transaction records cleared successfully!"
+    );
+}
+
+
+/* =========================================================
+   BALANCE TABLE
+========================================================= */
+
+function renderAdminBalanceTable() {
+
+    const tbody =
+        document.getElementById(
+            "admin-balance-table-body"
+        );
+
+    if (!tbody) return;
+
+
+    const users =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_users"
+            )
+        ) || [];
+
+
+    tbody.innerHTML = "";
+
+
+    users.forEach(
+        function (user) {
+
+            const wallet =
+                parseFloat(
+                    user.bdtBalance || 0
+                );
+
+            const totalDue =
+                user.dues
+                    ? parseFloat(
+                        user.dues.amount || 0
+                    )
+                    : 0;
+
+            const paid =
+                user.dues
+                    ? parseFloat(
+                        user.dues.paid || 0
+                    )
+                    : 0;
+
+
+            let remaining =
+                totalDue - paid;
+
+
+            if (remaining < 0) {
+
+                remaining = 0;
+            }
+
+
+            let status =
+                remaining <= 0
+
+                    ?
+
+                    `<span
+                        class="badge"
+                        style="
+                            background:#10b981;
+                            color:white;
+                            padding:3px 8px;
+                        "
+                    >
+                        NO DUE
+                    </span>`
+
+                    :
+
+                    `<span
+                        class="badge"
+                        style="
+                            background:#ef4444;
+                            color:white;
+                            padding:3px 8px;
+                        "
+                    >
+                        DUE: ৳${remaining.toFixed(2)}
+                    </span>`;
+
+
+            const tr =
+                document.createElement("tr");
+
+
+            tr.innerHTML = `
+
+                <td>
+
+                    <strong>
+                        ${user.name || ""}
+                    </strong>
+
+                    <br>
+
+                    <small
+                        style="color:#64748b;"
+                    >
+                        @${user.username || ""}
+                    </small>
+
+                </td>
+
+
+                <td>
+
+                    <span
+                        class="badge"
+                        style="
+                            background:#6b7280;
+                            color:white;
+                            padding:3px 8px;
+                        "
+                    >
+                        ${(user.role || "user").toUpperCase()}
+                    </span>
+
+                </td>
+
+
+                <td>
+                    ৳ ${wallet.toFixed(2)}
+                </td>
+
+
+                <td>
+                    ৳ ${totalDue.toFixed(2)}
+                </td>
+
+
+                <td>
+                    ৳ ${paid.toFixed(2)}
+                </td>
+
+
+                <td>
+                    ৳ ${remaining.toFixed(2)}
+                </td>
+
+
+                <td>
+                    ${status}
+                </td>
+
+            `;
+
+
+            tbody.appendChild(tr);
+        }
+    );
+}
+
+
+/* =========================================================
+   ADMIN COMPLETE REQUEST
+========================================================= */
+
+function adminCompleteRequest(reqId) {
+
+    const pin =
+        prompt(
+            "Enter PIN / Transaction Reference Number to complete this request:"
+        );
+
+
+    if (pin === null) return;
+
+
+    if (!pin.trim()) {
+
+        alert(
+            "PIN cannot be empty!"
+        );
+
+        return;
+    }
+
+
+    let requests =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_transfer_requests"
+            )
+        ) || [];
+
+
+    const index =
+        requests.findIndex(
+            r =>
+                String(r.id) ===
+                String(reqId)
+        );
+
+
+    if (
+        index !== -1 &&
+        requests[index].status === "Pending"
+    ) {
+
+        requests[index].status =
+            "Completed";
+
+        requests[index].pin =
+            pin.trim();
+
+
+        localStorage.setItem(
+            "takago_transfer_requests",
+            JSON.stringify(requests)
+        );
+
+
+        alert(
+            "Request marked as Completed with PIN!"
+        );
+
+
+        renderFinancialDashboard();
+
+        renderAdminTransactionInventory();
+    }
+}
+
+
+/* =========================================================
+   ADMIN CANCEL REQUEST
+========================================================= */
+
+function adminCancelRequest(reqId) {
+
+    if (
+        !confirm(
+            "Are you sure you want to cancel this transfer? The amount will be refunded to the user's wallet."
+        )
+    ) {
+
+        return;
+    }
+
+
+    let requests =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_transfer_requests"
+            )
+        ) || [];
+
+
+    const index =
+        requests.findIndex(
+            r =>
+                String(r.id) ===
+                String(reqId)
+        );
+
+
+    if (
+        index === -1 ||
+        requests[index].status !== "Pending"
+    ) {
+
+        return;
+    }
+
+
+    const request =
+        requests[index];
+
+
+    let users =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_users"
+            )
+        ) || [];
+
+
+    const userIndex =
+        users.findIndex(
+            u =>
+                String(u.id) ===
+                String(request.userId)
+        );
+
+
+    if (userIndex !== -1) {
+
+        users[userIndex].bdtBalance =
+            parseFloat(
+                users[userIndex].bdtBalance || 0
+            ) +
+            parseFloat(
+                request.bdtAmount ||
+                request.bdt ||
+                0
+            );
+
+
+        localStorage.setItem(
+            "takago_users",
+            JSON.stringify(users)
+        );
+    }
+
+
+    requests[index].status =
+        "Cancelled";
+
+
+    localStorage.setItem(
+        "takago_transfer_requests",
+        JSON.stringify(requests)
+    );
+
+
+    renderFinancialDashboard();
+
+    renderAdminTransactionInventory();
+
+
+    alert(
+        "Request cancelled and balance refunded to user."
+    );
+}
+
+
+/* =========================================================
+   ADMIN PDF REPORT
+   DATE FILTER SUPPORT
+========================================================= */
+
+function downloadAdminPDFReport() {
+
+    const requests =
+        JSON.parse(
+            localStorage.getItem(
+                "takago_transfer_requests"
+            )
+        ) || [];
+
+
+    if (requests.length === 0) {
+
+        alert(
+            "No transaction records found!"
+        );
+
+        return;
+    }
+
+
+    const dateInput =
+        document.getElementById(
+            "pdf-filter-date"
+        );
+
+
+    const selectedDate =
+        dateInput
+            ? dateInput.value
+            : "";
+
+
+    let filtered =
+        requests.slice();
+
+
+    /*
+     * Date filter:
+     * compares YYYY-MM-DD with
+     * transaction timestamp.
+     */
+
+    if (selectedDate) {
+
+        filtered =
+            requests.filter(
+                function (req) {
+
+                    const dateText =
+                        String(
+                            req.timestamp || ""
+                        );
+
+                    const transactionDate =
+                        new Date(
+                            dateText
+                        );
+
+                    if (
+                        !isNaN(
+                            transactionDate.getTime()
+                        )
+                    ) {
+
+                        const year =
+                            transactionDate
+                                .getFullYear();
+
+                        const month =
+                            String(
+                                transactionDate
+                                    .getMonth() + 1
+                            )
+                            .padStart(2, "0");
+
+                        const day =
+                            String(
+                                transactionDate
+                                    .getDate()
+                            )
+                            .padStart(2, "0");
+
+                        const formatted =
+                            `${year}-${month}-${day}`;
+
+                        return (
+                            formatted ===
+                            selectedDate
+                        );
+                    }
+
+                    return false;
+                }
+            );
+    }
+
+
+    if (filtered.length === 0) {
+
+        alert(
+            "No transactions found for the selected date."
+        );
+
+        return;
+    }
+
+
+    /*
+     * jsPDF
+     */
+
+    if (
+        !window.jspdf ||
+        !window.jspdf.jsPDF
+    ) {
+
+        alert(
+            "PDF library is not loaded. Please check your internet connection and reload the page."
+        );
+
+        return;
+    }
+
+
+    const {
+        jsPDF
+    } = window.jspdf;
+
+
+    const doc =
+        new jsPDF();
+
+
+    /*
+     * Header
+     */
+
+    doc.setFontSize(20);
+
+    doc.setFont("helvetica", "bold");
+
+    doc.text(
+        "TAKA GO",
+        14,
+        18
+    );
+
+
+    doc.setFontSize(11);
+
+    doc.setFont(
+        "helvetica",
+        "normal"
+    );
+
+    doc.text(
+        "Customer Transaction Report",
+        14,
+        26
+    );
+
+
+    doc.text(
+        selectedDate
+            ? `Date: ${selectedDate}`
+            : "All Transactions",
+        14,
+        33
+    );
+
+
+    doc.text(
+        `Generated: ${new Date().toLocaleString()}`,
+        14,
+        40
+    );
+
+
+    /*
+     * Table
+     */
+
+    const tableRows =
+        filtered.map(
+            function (req) {
+
+                return [
+
+                    String(
+                        req.id
+                    ),
+
+                    String(
+                        req.userName ||
+                        "N/A"
+                    ),
+
+                    String(
+                        req.receiverName ||
+                        "N/A"
+                    ),
+
+                    String(
+                        req.receiverAcc ||
+                        "N/A"
+                    ),
+
+                    String(
+                        req.method ||
+                        "N/A"
+                    ),
+
+                    `BDT ${parseFloat(
+                        req.bdtAmount ||
+                        req.bdt ||
+                        0
+                    ).toFixed(2)}`,
+
+                    String(
+                        req.status ||
+                        "Pending"
+                    ),
+
+                    String(
+                        req.pin ||
+                        "-"
+                    )
+
+                ];
+            }
+        );
+
+
+    if (
+        typeof doc.autoTable !==
+        "function"
+    ) {
+
+        alert(
+            "AutoTable PDF plugin is not loaded. Please reload the page."
+        );
+
+        return;
+    }
+
+
+    doc.autoTable({
+
+        startY:48,
+
+        head:[[
+            "ID",
+            "Customer",
+            "Receiver",
+            "Account/Phone",
+            "Method",
+            "Amount",
+            "Status",
+            "PIN"
+        ]],
+
+        body:tableRows,
+
+        theme:"grid",
+
+        styles:{
+            fontSize:8,
+            cellPadding:3
+        },
+
+        headStyles:{
+            fontStyle:"bold"
+        },
+
+        margin:{
+            left:10,
+            right:10
+        }
+
+    });
+
+
+    /*
+     * Summary
+     */
+
+    const totalAmount =
+        filtered.reduce(
+            function (sum, req) {
+
+                return (
+                    sum +
+                    parseFloat(
+                        req.bdtAmount ||
+                        req.bdt ||
+                        0
+                    )
+                );
+            },
+            0
+        );
+
+
+    const finalY =
+        doc.lastAutoTable
+            ? doc.lastAutoTable.finalY + 10
+            : 60;
+
+
+    doc.setFontSize(11);
+
+    doc.setFont(
+        "helvetica",
+        "bold"
+    );
+
+
+    doc.text(
+        `Total Transactions: ${filtered.length}`,
+        14,
+        finalY
+    );
+
+
+    doc.text(
+        `Total Amount: BDT ${totalAmount.toFixed(2)}`,
+        14,
+        finalY + 7
+    );
+
+
+    /*
+     * Filename
+     */
+
+    const filename =
+        selectedDate
+            ? `TAKA-GO-Transaction-Report-${selectedDate}.pdf`
+            : `TAKA-GO-Transaction-Report-${new Date()
+                .toISOString()
+                .slice(0,10)}.pdf`;
+
+
+    doc.save(filename);
+}
+
+</script>
+
+</body>
+</html>
